@@ -1,0 +1,399 @@
+{
+  "schema_version": "0.1",
+  "meta": {
+    "id": "seerly-mcp-docs-plugin-readme",
+    "repo": "Seerly-AI/seerly-mcp",
+    "commit_range": {
+      "base_sha": "3e1d39f54357bfac920ff4b312c42aff0a2c7daf",
+      "head_sha": "9d185a0d8565cb9addf417447d5af1e69dd91741"
+    },
+    "session": {
+      "agent": "unknown",
+      "model": "unknown",
+      "session_ids": [
+        "253ba429-c3a3-455e-93f2-127553ef0255"
+      ]
+    },
+    "generated_by": {
+      "pipeline": "review-assist two-agent distillation",
+      "version": "0.1"
+    },
+    "generated_at": "2026-11-13T14:25:00Z",
+    "interview": {
+      "rounds": 8,
+      "questions_asked": 8,
+      "unresolved": 1,
+      "author_attested": 7,
+      "developer_attested": 0,
+      "unanswered": 1
+    }
+  },
+  "problem": {
+    "statement": "plugin/ had no README: Claude directory submission blocked, no listing description, no data-flow disclosure",
+    "origin": "emerged_during_session",
+    "user_asks": [
+      "Lets try to release it on claude"
+    ],
+    "out_of_scope": [
+      "Privacy-policy section on AI assistant connectors (recommended, not done)",
+      "Backend destructiveHint PR (airo-backend, separate)",
+      "Push, PR and directory submission",
+      "Install commands: stay in root README"
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "assumption": "Anthropic rules as read 2026-11-13: README inside plugin/, 40+ words outside code, used as listing, must disclose data flows",
+      "impact_if_wrong": "Submission blocked or listing reads badly",
+      "how_to_verify": "Re-read claude.com/docs/plugins/pre-submission-checklist; portal check at submit",
+      "confidence": "unverified",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "A2",
+      "assumption": "Portal submits plugin/, not repo root",
+      "impact_if_wrong": "Root README install-and-layout text becomes the listing",
+      "how_to_verify": "Portal folder field at submission",
+      "confidence": "unverified",
+      "anchors": [
+        "H2",
+        "H3"
+      ]
+    },
+    {
+      "id": "A3",
+      "assumption": "Model calls write tools without `confirm` first",
+      "impact_if_wrong": "confirm=true on first call acts with no preview; README overstates guarantee",
+      "how_to_verify": "airo-backend src/core/mcp/writes/write-tool.ts lines 6, 18-20; add-prompts.tool.ts 65-66; generate-article.tool.ts 66-67",
+      "confidence": "unverified",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "A4",
+      "assumption": "Model never estimates what a tool reports unavailable",
+      "impact_if_wrong": "'Reported as unavailable rather than estimated' fails; it is a model instruction, not a server guarantee",
+      "how_to_verify": "airo-backend src/core/mcp/tools/instructions.ts line 9",
+      "confidence": "unverified",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "A5",
+      "assumption": "Enterprise projects get Claude despite prod DISABLED_PROVIDERS=claude",
+      "impact_if_wrong": "'plus Claude on Enterprise plans' still overclaims in public listings",
+      "how_to_verify": "airo-backend provider-config-adapter.service.ts:91 applyGlobalDisabled for a per-project override; prod env DISABLED_PROVIDERS",
+      "confidence": "unverified",
+      "anchors": [
+        "H1",
+        "H3",
+        "H4"
+      ]
+    },
+    {
+      "id": "A6",
+      "assumption": "plugin/ holds only manifests, .mcp.json, skill and references",
+      "impact_if_wrong": "'Runs no code on your machine' and 'sends nothing anywhere else' go stale",
+      "how_to_verify": "ls -R plugin/",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "A7",
+      "assumption": "seerly.app/privacy adequate for a connector listing",
+      "impact_if_wrong": "Review flags missing connector, token or disconnect language",
+      "how_to_verify": "Read seerly.app/privacy for connector, token, disconnect text",
+      "confidence": "unverified",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "A8",
+      "assumption": "Prompt-limit and content-credit wording matches backend behaviour",
+      "impact_if_wrong": "Listing misstates cost; add_prompts save can still 402 when stored counter exceeds live count",
+      "how_to_verify": "plugin/skills/seerly/references/add_prompts.md and generate_article.md line 5; airo-backend add-prompts.tool.ts lines 80-91",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "A9",
+      "assumption": "Backend PR fix/mcp-write-destructive-hint reaches prod before submission",
+      "impact_if_wrong": "Write tools reach review with destructiveHint false",
+      "how_to_verify": "Prod tools/list: destructiveHint true on add_prompts and generate_article",
+      "confidence": "unverified"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "Should plugin/README.md say 'connects Claude' when it also ships in the ChatGPT/Codex ZIP?",
+      "context": "scripts/package-openai.sh zips plugin/ minus mcp.json, .mcp.json, .claude-plugin/*; never discussed",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "Q2",
+      "question": "Which support contact goes in the listing?",
+      "context": "seerly.app/contact is a stand-in; user asked twice, no reply",
+      "raised_by": "author_agent",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "Q3",
+      "question": "Disclose that the token is the 7-day login JWT with no disconnect?",
+      "context": "Open item in the plan doc; README says only 'Claude keeps the access token'",
+      "raised_by": "author_agent",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "Q4",
+      "question": "Do SKILL.md and the Claude manifest still list Claude as a general engine?",
+      "context": "Author cited SKILL.md description line 3 carrying the old list; 9d185a0 touched only README.md, plugin/README.md, plugin/plugin.json",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H1",
+        "H3",
+        "H4"
+      ]
+    }
+  ],
+  "approach": {
+    "requirements": [
+      {
+        "text": "README inside plugin/, 40+ words outside code blocks",
+        "source": "Anthropic plugin pre-submission checklist, read by web-fetch subagent"
+      },
+      {
+        "text": "Disclose everything the plugin runs, sends or fetches",
+        "source": "Anthropic plugin submission docs, read by web-fetch subagent"
+      },
+      {
+        "text": "README doubles as public listing description",
+        "source": "Anthropic plugin submission docs, read by web-fetch subagent"
+      },
+      {
+        "text": "List Claude only as an Enterprise-plan engine",
+        "source": "Developer decision, relayed by orchestrator; not author-attested"
+      }
+    ],
+    "trials": [
+      {
+        "what": "Rely on repo-root README as the listing",
+        "outcome": "Ruled out from submission docs; never tried",
+        "why_abandoned": "Directory submits plugin/; root README outside it"
+      },
+      {
+        "what": "seerly.app/support as support link",
+        "outcome": "Probe returned 404",
+        "why_abandoned": "Page missing; /contact returns 200; no support email exists"
+      },
+      {
+        "what": "Claude listed as a general engine (1b31cb5)",
+        "outcome": "Author found Claude disabled in prod (DISABLED_PROVIDERS=claude)",
+        "why_abandoned": "Developer: Claude only for certain clients; pricing lists it under Enterprise"
+      }
+    ],
+    "adopted": {
+      "summary": "- Public listing copy in plugin/README.md\n- Root README layout points at it\n- Engine list narrowed to what prod runs, in all three public descriptions",
+      "rationale": "- Listing copy, not developer docs: README is the listing description\n- One section per thing the scan checks: what it includes, what it sends and receives\n- Write tools named with their cost: prompt limit, content credits\n- Install commands left in root README\n- Support link /contact: only live contact surface\n- Same engine wording in root README, plugin README and Codex manifest"
+    }
+  },
+  "tour": [
+    {
+      "id": "T1",
+      "title": "Plugin listing README",
+      "role": "core",
+      "what": "- Adds `plugin/README.md`, the directory listing description\n- Lists contents: remote MCP server at `https://seerly.app/api/mcp`, `seerly` skill\n- Discloses data flow: HTTPS to seerly.app only, OAuth, no password to Claude\n- Names the two data-changing tools, `add_prompts` and `generate_article`, with cost and preview-then-confirm\n- States plan-gated tools report unavailable, not estimated\n- Links support (/contact) and privacy pages",
+      "why": "- Missing or short README blocks submission\n- Security scan reads its data-flow section\n- Root README sits outside the submitted folder",
+      "anchors": [
+        {
+          "id": "H3",
+          "path": "plugin/README.md",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 23
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Preview-then-confirm and 'never estimated' are model instructions, not server guarantees"
+    },
+    {
+      "id": "T2",
+      "title": "Root README layout entry",
+      "role": "supporting",
+      "what": "- Adds `plugin/README.md` to the root README Layout tree as the listing description",
+      "why": "- Only place the repo records which file is the listing text",
+      "anchors": [
+        {
+          "id": "H2",
+          "path": "README.md",
+          "hunk": {
+            "old_start": 51,
+            "old_lines": 6,
+            "new_start": 51,
+            "new_lines": 7
+          }
+        }
+      ],
+      "provenance": "from_transcript"
+    },
+    {
+      "id": "T3",
+      "title": "Engine list: Claude only on Enterprise plans",
+      "role": "core",
+      "what": "- Rewrites engine list in root README intro, plugin README, `plugin.json` com.openai `longDescription`\n- Moves Claude to 'plus Claude on Enterprise plans'",
+      "why": "- Prod disables Claude: DISABLED_PROVIDERS=claude per airo-backend `llm-models.config.ts`\n- Developer: Claude runs for certain clients only\n- Pricing page lists Claude under Enterprise only",
+      "anchors": [
+        {
+          "id": "H1",
+          "path": "README.md",
+          "hunk": {
+            "old_start": 1,
+            "old_lines": 6,
+            "new_start": 1,
+            "new_lines": 6
+          }
+        },
+        {
+          "id": "H3",
+          "path": "plugin/README.md",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 23
+          }
+        },
+        {
+          "id": "H4",
+          "path": "plugin/plugin.json",
+          "hunk": {
+            "old_start": 15,
+            "old_lines": 7,
+            "new_start": 15,
+            "new_lines": 7
+          }
+        }
+      ],
+      "provenance": "confirmed_in_interview",
+      "attention": "SKILL.md and Claude manifest descriptions not updated in this commit"
+    }
+  ],
+  "verification": {
+    "performed": [
+      {
+        "kind": "lint",
+        "description": "claude plugin validate ./plugin (at 1b31cb5)",
+        "result": "Validation passed"
+      },
+      {
+        "kind": "manual",
+        "description": "python3 regex word count of plugin/README.md, fenced code stripped",
+        "result": "222 words outside code"
+      },
+      {
+        "kind": "manual",
+        "description": "curl status probes on seerly.app",
+        "result": "privacy, terms, contact, docs 200; support 404"
+      },
+      {
+        "kind": "manual",
+        "description": "curl seerly.app/privacy, parsed for sections",
+        "result": "No mailto, no connector text, contact form only"
+      },
+      {
+        "kind": "manual",
+        "description": "sed -n '/## Layout/,/^scripts/p' README.md",
+        "result": "Layout line present"
+      }
+    ],
+    "not_verified": [
+      {
+        "text": "No push, PR or portal submission: Anthropic README check and security scan never ran",
+        "anchors": [
+          "H3"
+        ]
+      },
+      {
+        "text": "222 is the session's regex count, not Anthropic's counting rule",
+        "anchors": [
+          "H3"
+        ]
+      },
+      {
+        "text": "README links not re-fetched after writing",
+        "anchors": [
+          "H3"
+        ]
+      },
+      {
+        "text": "Rendering on GitHub and in the directory unchecked",
+        "anchors": [
+          "H3"
+        ]
+      },
+      {
+        "text": "OpenAI ZIP not rebuilt with the new README (npm run package:openai)",
+        "anchors": [
+          "H3",
+          "H4"
+        ]
+      },
+      {
+        "text": "Behavioural claims (plan gating, preview-then-confirm, cost) not re-checked at write time",
+        "anchors": [
+          "H3"
+        ]
+      },
+      {
+        "text": "claude.ai connector OAuth untested; only Claude Code flow exercised",
+        "anchors": [
+          "H3"
+        ]
+      },
+      {
+        "text": "No check reported after 9d185a0, including the plugin/plugin.json JSON edit",
+        "anchors": [
+          "H1",
+          "H3",
+          "H4"
+        ]
+      },
+      "Session agent and model: author never answered"
+    ]
+  },
+  "evaluated": [
+    {
+      "question": "plugin/README.md makes factual claims your assumptions did not cover: `add_prompts` counts against the plan's prompt limit; `generate_article` spends content credits; Claude keeps the OAuth token and never sees the password; the skill is named `seerly`; the engine list (ChatGPT, Gemini, Claude, Perplexity, Google AI Overviews). For each, was it checked against code, tool descriptions or tools-list.json in the session (cite the entry), or written from earlier context without a check?",
+      "answer": "General point: the README was written in one Write at entry 6229, right after the gap report at 6214. No command between them reads code or tool descriptions. So none of the five claims was re-checked at the moment of writing. Each one traces to something the session read earlier, except the engine list.\n\n1. add_prompts counts against the plan's prompt limit\n   - Not checked when writing.\n   - Source in the session: the tool description in tools-list.json, dumped from the real backend server at 5692-5698. It was rendered into references and found identical to the plugin pages (5709: \"0 differing lines\").\n   - The reference text, plugin/skills/seerly/references/add_prompts.md line 5: \"Skips prompts already tracked and stops at the plan's prompt limit.\"\n   - The 6134 script read tools-list.json, but it printed only the annotations.\n   - Inference from code (airo-backend main, add-prompts.tool.ts):\n     - lines 80-91: the limit is maxTotalPrompts minus tracked prompts;\n     - lines 144-150: the save goes through the existing create_topic_with_prompts route.\n     - So 'counts against' is consistent with 'stops at'.\n   - Caveat from the plan doc line 201: \"add_prompts previews against the live count; the save can still return 402 if the stored counter is higher.\"\n2. generate_article spends content credits\n   - Not checked when writing.\n   - Same source: references/generate_article.md line 5, \"Spends content credits. Call it first without confirm: it returns the credit cost and the credits left.\"\n   - SKILL.md line 60 says the same. The session read SKILL.md in full at 5629/5640; at 5796: \"I read the skill, the manifests and the scripts in full\".\n   - It matches the consent-copy fix earlier in the session (C17): \"generate articles (which use your credits)\".\n3. Claude keeps the OAuth token and never sees the password\n   - Not checked against code when writing. It rests on the session's own runs of the flow:\n     - local SDK OAuth flow, 27/27 (5430);\n     - prod `claude mcp login \"plugin:seerly:seerly\"` (6042);\n     - 6108: \"Claude Code registered itself, sent you to seerly.app to sign in and approve, and got its token through the localhost callback.\"\n   - Sign-in and consent happen on seerly.app (/login, /connect), never in the client.\n   - Only Claude Code was exercised. claude.ai, where Anthropic's servers hold the token, was not tested; that test was asked of the user.\n   - Inference from code: seerly-front app/login/page.tsx has password fields (6 matches), so password login exists. The claim holds because entry happens on seerly.app.\n   - The README does not mention that the token is the 7-day login JWT with no disconnect, which is an open item in the plan doc.\n4. The skill is named `seerly`\n   - Checked in the session:\n     - 5629/5640 `cat plugin/skills/seerly/SKILL.md`;\n     - 5854, the install from the public repo showed \"one skill and one MCP server\";\n     - 6108: \"Claude used the plugin's `seerly` skill\".\n   - Code: SKILL.md line 2 is `name: seerly`.\n5. Engine list (ChatGPT, Gemini, Claude, Perplexity, Google AI Overviews)\n   - Never checked against code in the session. It was copied from existing repo text that already said the same: root README line 3 (in base 3e1d39f), plugin/plugin.json longDescription line 18, SKILL.md description line 3.\n   - Inference from code, found while answering this and NOT in the session: airo-backend src/config/llm-models.config.ts lines 556-566. On the claude entry: \"NOT RUNNING IN PRODUCTION as of 2026-08-30: the prod backend sets DISABLED_PROVIDERS=claude, and ProviderConfigAdapterService.applyGlobalDisabled (provider-config-adapter.service.ts:91) filters claude out of the engine list.\"\n   - So 'Seerly measures how ... Claude ... mention' may be untrue in prod today. This is a code comment, and the gate is an env var; I did not check the prod env.\n   - If true, the same overclaim is in the pre-existing manifest and skill text, and it would reach the public listing.\n   - I could not put this to the developer: there is no ask tool in this role's access.",
+      "anchors": [
+        "H2"
+      ]
+    }
+  ],
+  "unresolved": [
+    {
+      "question": "For meta.session: which agent (client) and which model does the transcript of session 253ba429-c3a3-455e-93f2-127553ef0255 show, and the timestamps of the first and last entries that produced this diff (6116 and 6322)? Only what the transcript records; say unknown otherwise.",
+      "disposition": "unanswered"
+    }
+  ]
+}
