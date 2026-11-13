@@ -1,0 +1,510 @@
+{
+  "schema_version": "0.1",
+  "meta": {
+    "id": "seerly-mcp-feat-preview-tools",
+    "repo": "Seerly-AI/seerly-mcp",
+    "commit_range": {
+      "base_sha": "2c4f7a51d29e00f1c6e9352b8970a483c789b3da",
+      "head_sha": "68b342f0e41a870909cdd7ec88b8605a7e795af0"
+    },
+    "session": {
+      "agent": "unknown",
+      "model": "unknown",
+      "session_ids": [
+        "253ba429-c3a3-455e-93f2-127553ef0255"
+      ]
+    },
+    "generated_by": {
+      "pipeline": "review-assist",
+      "version": "0.1"
+    },
+    "generated_at": "2026-11-13T14:52:00Z",
+    "interview": {
+      "rounds": 10,
+      "questions_asked": 10,
+      "unresolved": 1,
+      "author_attested": 9,
+      "developer_attested": 0,
+      "unanswered": 1
+    }
+  },
+  "problem": {
+    "statement": "Plugin skill, references and listing copy still teach the one-tool `confirm=true` write flow that the backend replaces with read-only `preview_*` tools and previewId-only actions.",
+    "origin": "emerged_during_session",
+    "user_asks": [
+      "Lets try to release it on claude",
+      "I have merged the commits. Can you explain to me more on the double approval prompt ?",
+      "Lets do it the right way."
+    ],
+    "out_of_scope": [
+      "Backend preview tools themselves: airo-backend feat/mcp-write-previews (ae3277ce), separate PR",
+      "ChatGPT/Codex ZIP rebuild and re-upload",
+      "claude.ai connector test, reviewer test account, support contact (directory submission items)"
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "assumption": "Backend ae3277ce merged and promoted to seerly.app before this reaches main",
+      "impact_if_wrong": "Model calls `preview_*` tools prod lacks; fails with tool-not-found, no data risk",
+      "how_to_verify": "tools/list at https://seerly.app/api/mcp lists preview_add_prompts and preview_generate_article (26 tools)",
+      "confidence": "unverified",
+      "anchors": [
+        "H5",
+        "H6",
+        "H7",
+        "H8",
+        "H9",
+        "H10"
+      ]
+    },
+    {
+      "id": "A2",
+      "assumption": "Reference pages match backend branch ae3277ce, not prod",
+      "impact_if_wrong": "Pages go stale if the backend PR changes args, descriptions or TTL in review",
+      "how_to_verify": "SEERLY_TOKEN=... npm run references && git status --porcelain plugin/skills/seerly/references",
+      "confidence": "unverified",
+      "anchors": [
+        "H7",
+        "H8",
+        "H9",
+        "H10"
+      ]
+    },
+    {
+      "id": "A3",
+      "assumption": "\"once, within 15 minutes\" matches backend PREVIEW_TTL_MINUTES = 15 and GETDEL redeem",
+      "impact_if_wrong": "Public listing copy and skill rule wrong after a backend TTL change",
+      "how_to_verify": "grep -n PREVIEW_TTL_MINUTES src/core/mcp/writes/write-preview-store.service.ts (airo-backend)",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H1",
+        "H3",
+        "H6"
+      ]
+    },
+    {
+      "id": "A4",
+      "assumption": "Every tool with readOnlyHint=false has a `preview_<name>` twin",
+      "impact_if_wrong": "Future write tool without a preview gets a page naming a tool that does not exist",
+      "how_to_verify": "After each regeneration: every 'Changes data.' page names an existing preview_*.md",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H11"
+      ]
+    },
+    {
+      "id": "A5",
+      "assumption": "Claude runs read-only tools without a dialog and prompts once for destructive ones",
+      "impact_if_wrong": "UX gain of the split lost; correctness unaffected",
+      "how_to_verify": "claude.ai custom connector test after backend deploy: preview_* silent, action prompts once",
+      "confidence": "unverified"
+    },
+    {
+      "id": "A6",
+      "assumption": "Plan drift inside the 15 minutes is rare enough to leave out of the skill",
+      "impact_if_wrong": "Action saves a subset of agreed prompts, or spends a changed credit cost, without re-asking",
+      "how_to_verify": "Backend write-tools.ts:114-128 re-runs spec.plan at redeem; check add-prompts.tool.ts / generate-article.tool.ts selection",
+      "confidence": "unverified",
+      "anchors": [
+        "H3",
+        "H5",
+        "H6"
+      ]
+    },
+    {
+      "id": "A7",
+      "assumption": "Raising `version` in plugin.json is how directory listings pick up a release",
+      "impact_if_wrong": "Clients keep 0.1.0 skill text against the new server",
+      "how_to_verify": "Anthropic plugin directory docs on updates; reinstall at 0.2.0 from the self-hosted marketplace",
+      "confidence": "unverified",
+      "anchors": [
+        "H2",
+        "H4"
+      ]
+    },
+    {
+      "id": "A8",
+      "assumption": "Same plugin/ folder works on ChatGPT/Codex via scripts/package-openai.sh",
+      "impact_if_wrong": "Preview flow broken or undocumented on ChatGPT/Codex",
+      "how_to_verify": "npm run package:openai, re-upload, run one preview + action",
+      "confidence": "unverified"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "Should SKILL.md give the model rules for redeem outcomes besides expiry?",
+      "context": "Uncovered: blocked at redeem after id consumed, credits run out since preview, partial add_prompts, cost drift, execute() failure",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H5",
+        "H6"
+      ]
+    },
+    {
+      "id": "Q2",
+      "question": "Is the listing claim 'has shown you what will change and you agree' acceptable as public copy?",
+      "context": "Server enforces a preview for same tool + token; cannot know the user saw or agreed; plan recomputed at redeem",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H3"
+      ]
+    },
+    {
+      "id": "Q3",
+      "question": "Do installed self-hosted-marketplace copies refresh from main on their own, or only on manual update?",
+      "context": "Decides how long 0.1.0 clients send confirm=true after backend promote; session never researched it",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H2",
+        "H4"
+      ]
+    }
+  ],
+  "approach": {
+    "requirements": [
+      {
+        "text": "Split each write into a read-only `preview_*` tool returning a previewId and a destructive action taking only that id",
+        "source": "Assistant plan (6613), after user: \"Lets do it the right way.\""
+      },
+      {
+        "text": "Regenerate plugin skill text and reference pages for the preview tools",
+        "source": "Assistant option B (6576), chosen by user (6607)"
+      },
+      {
+        "text": "Plugin publishable on Claude and Codex",
+        "source": "User, session opener: \"Note that I wanted the MCP plugin to be published on Claude and Codex.\""
+      },
+      {
+        "text": "Merge plugin only after backend is on prod",
+        "source": "Assistant, submission pack plans/2026-11-13-claude-directory-submission.md:10"
+      }
+    ],
+    "trials": [
+      {
+        "what": "Option A: keep one tool per write with `confirm`, mark it destructiveHint=true, accept the extra dialog",
+        "outcome": "Recommended twice by the assistant (6539, 6576)",
+        "why_abandoned": "User: \"Lets do it the right way.\""
+      },
+      {
+        "what": "One tool per write, preview without `confirm`, act with `confirm=true`",
+        "outcome": "Hints apply per tool, so the free preview call also prompted: 3 approvals per action",
+        "why_abandoned": "Double prompt; nothing tied confirm=true to a preview the user saw"
+      },
+      {
+        "what": "destructiveHint=false on the writes (they only add)",
+        "outcome": "Initial setting; MCP spec reads false as 'only additive updates'",
+        "why_abandoned": "Anthropic directory rule wants destructiveHint=true for tools that modify data; risked rejection"
+      },
+      {
+        "what": "Ship the destructive-hint fix as its own backend PR",
+        "outcome": "Committed as 3f149a75 with its own Intent Document",
+        "why_abandoned": "Option B changes the same branch; folded into feat/mcp-write-previews"
+      },
+      {
+        "what": "Regenerate references with `npm run references` against live seerly.app",
+        "outcome": "Not run",
+        "why_abandoned": "Live server lacks the new tools; used an in-process tools/list dump through the same renderReference"
+      }
+    ],
+    "adopted": {
+      "summary": "Point every plugin text at the two-step flow: `preview_*` returns plan + previewId, action takes only that previewId.",
+      "rationale": "- Read-only preview runs without a dialog; only the action prompts\n- previewId lets the server tie the action to a real preview: same tool, same token, single use, 15 minutes\n- Action args come from the stored preview, so action pages carry only `previewId`\n- Write-tool header generated from readOnlyHint, so future write pages inherit the rule\n- References rendered by the repo's own renderReference, so 22 untouched pages stay byte-identical"
+    }
+  },
+  "tour": [
+    {
+      "id": "T1",
+      "title": "Skill rules: act only on a previewId",
+      "role": "core",
+      "what": "- Prompt workflow: `preview_add_prompts`, show preview, then `add_prompts` with its `previewId`\n- Article workflow: `preview_generate_article` for the credit cost, then `generate_article` with its `previewId`\n- Rules: replaces 'call again with confirm=true' with 'act only on a previewId from the preview tool'\n- Adds recovery: previewId single-use, 15 minutes; re-preview when expired",
+      "why": "- SKILL.md is the model's operating rules: the real behaviour change in this repo\n- Backend actions no longer accept `confirm` or content args, only `previewId`",
+      "anchors": [
+        {
+          "id": "H5",
+          "path": "plugin/skills/seerly/SKILL.md",
+          "hunk": {
+            "old_start": 29,
+            "old_lines": 13,
+            "new_start": 29,
+            "new_lines": 13
+          }
+        },
+        {
+          "id": "H6",
+          "path": "plugin/skills/seerly/SKILL.md",
+          "hunk": {
+            "old_start": 57,
+            "old_lines": 7,
+            "new_start": 57,
+            "new_lines": 7
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Only expiry has a rule; redeem blocks, partial adds and cost drift leave the model unguided"
+    },
+    {
+      "id": "T2",
+      "title": "Regenerated reference pages for the four write-path tools",
+      "role": "core",
+      "what": "- `add_prompts`, `generate_article`: argument table shrinks to one required `previewId`\n- Drops `confirm` and every content arg (project, topic, prompts, title, brief, keywords, ids)\n- Adds `preview_add_prompts`: read-only, old add_prompts args, returns added/skipped prompts + previewId\n- Adds `preview_generate_article`: read-only, old generate_article args, returns credit cost, credits left + previewId",
+      "why": "- Generated pages; what the model reads for arguments\n- Rendered from an in-process dump of backend branch ae3277ce (26 tools), not live seerly.app\n- Other 22 pages came out byte-identical, so absent from the diff",
+      "anchors": [
+        {
+          "id": "H7",
+          "path": "plugin/skills/seerly/references/add_prompts.md",
+          "hunk": {
+            "old_start": 1,
+            "old_lines": 19,
+            "new_start": 1,
+            "new_lines": 11
+          }
+        },
+        {
+          "id": "H8",
+          "path": "plugin/skills/seerly/references/generate_article.md",
+          "hunk": {
+            "old_start": 1,
+            "old_lines": 19,
+            "new_start": 1,
+            "new_lines": 11
+          }
+        },
+        {
+          "id": "H9",
+          "path": "plugin/skills/seerly/references/preview_add_prompts.md",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 18
+          }
+        },
+        {
+          "id": "H10",
+          "path": "plugin/skills/seerly/references/preview_generate_article.md",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 18
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Pages describe the unmerged backend branch; stale if its PR changes args, descriptions or TTL"
+    },
+    {
+      "id": "T3",
+      "title": "Reference header template names the preview twin",
+      "role": "core",
+      "what": "- `renderReference`: header for readOnlyHint=false tools now says 'Takes a previewId from `preview_<name>`'\n- Drops the confirm=true wording for every write tool",
+      "why": "- Header is generated for all write tools, now and future\n- Mirrors backend previewToolName() (`preview_${name}`); nothing links the two",
+      "anchors": [
+        {
+          "id": "H11",
+          "path": "scripts/render-reference.ts",
+          "hunk": {
+            "old_start": 31,
+            "old_lines": 7,
+            "new_start": 31,
+            "new_lines": 7
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "A write tool without a `preview_` twin would get a page pointing at a tool that does not exist"
+    },
+    {
+      "id": "T4",
+      "title": "Directory listing copy",
+      "role": "core",
+      "what": "- plugin README: each write runs only after its preview tool shows the change and the user agrees\n- States the action takes that preview's id, once, within 15 minutes",
+      "why": "- plugin/README.md becomes the Claude directory listing description: public product claim\n- Server enforces a preview for the same tool and token, not that the user saw or agreed",
+      "anchors": [
+        {
+          "id": "H3",
+          "path": "plugin/README.md",
+          "hunk": {
+            "old_start": 11,
+            "old_lines": 7,
+            "new_start": 11,
+            "new_lines": 7
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Claim is stronger than the server enforces; plan is also recomputed at redeem"
+    },
+    {
+      "id": "T5",
+      "title": "Plugin version 0.2.0",
+      "role": "supporting",
+      "what": "- Bumps `version` 0.1.0 -> 0.2.0 in both plugin manifests\n- package.json stays 0.1.0 (private scripts package, not a manifest)",
+      "why": "- Session's own update procedure: bump `version` in plugin.json and merge to main\n- plugin/plugin.json version is also what the ChatGPT/Codex ZIP carries\n- Never discussed with the user",
+      "anchors": [
+        {
+          "id": "H2",
+          "path": "plugin/.claude-plugin/plugin.json",
+          "hunk": {
+            "old_start": 1,
+            "old_lines": 6,
+            "new_start": 1,
+            "new_lines": 6
+          }
+        },
+        {
+          "id": "H4",
+          "path": "plugin/plugin.json",
+          "hunk": {
+            "old_start": 1,
+            "old_lines": 6,
+            "new_start": 1,
+            "new_lines": 6
+          }
+        }
+      ],
+      "provenance": "from_transcript"
+    },
+    {
+      "id": "T6",
+      "title": "Repo README restates the flow",
+      "role": "incidental",
+      "what": "- Job table pairs each write with its preview tool\n- Safety line: action runs only on a seen preview's id, once, within 15 minutes",
+      "why": "- Human-facing repo docs; no client reads them at runtime\n- One more copy of the backend's 15-minute constant",
+      "anchors": [
+        {
+          "id": "H1",
+          "path": "README.md",
+          "hunk": {
+            "old_start": 37,
+            "old_lines": 13,
+            "new_start": 37,
+            "new_lines": 13
+          }
+        }
+      ],
+      "provenance": "from_transcript"
+    }
+  ],
+  "diagrams": [
+    {
+      "title": "Write flow after this change",
+      "mermaid": "sequenceDiagram\n  participant U as User\n  participant M as Model\n  participant S as seerly.app MCP\n  M->>S: preview_add_prompts(args) - read-only, no dialog\n  S-->>M: plan plus previewId (15 min, single use)\n  M->>U: show preview\n  U-->>M: agree\n  M->>S: add_prompts(previewId) - client prompts once\n  S->>S: GETDEL previewId, re-run plan\n  S-->>M: result or cannotProceed",
+      "caption": "Same shape for preview_generate_article / generate_article"
+    }
+  ],
+  "verification": {
+    "performed": [
+      {
+        "kind": "manual",
+        "description": "grep plugin for `confirm`",
+        "result": "4 hits (SKILL.md, render-reference.ts, README.md, plugin/README.md); all rewritten by an assert-then-replace script"
+      },
+      {
+        "kind": "build",
+        "description": "Scratch write-refs.mts: repo's renderReference over backend tools/list dump (tools-list-v2.json)",
+        "result": "wrote 26; 2 pages modified, 2 new, 22 byte-identical"
+      },
+      {
+        "kind": "lint",
+        "description": "Plugin validation on marketplace and ./plugin (claude plugin validate, inferred from earlier pattern)",
+        "result": "Validation passed x2"
+      },
+      {
+        "kind": "manual",
+        "description": "grep -rn \"\\b24\\b\" across READMEs, SKILL.md, manifests, marketplaces for stale tool counts",
+        "result": "None found"
+      },
+      {
+        "kind": "test",
+        "description": "Backend (airo-backend, not this repo): tsc, write-tools.spec, src/core/mcp suites, 3 deliberate mutations",
+        "result": "10 write-tools tests; 9 suites / 72 tests pass; GET-not-GETDEL, tool-blind key, destructive preview mutations all caught"
+      }
+    ],
+    "added_tests": [],
+    "not_verified": [
+      "No push of feat/preview-tools, no PR",
+      {
+        "text": "`npm run references` against live seerly.app: backend not deployed",
+        "anchors": [
+          "H7",
+          "H8",
+          "H9",
+          "H10"
+        ]
+      },
+      {
+        "text": "No MCP call to preview_* or the actions on staging, prod or through the plugin",
+        "anchors": [
+          "H5",
+          "H6"
+        ]
+      },
+      "No Claude client check that preview_* runs without a dialog and the action prompts once",
+      {
+        "text": "No reinstall of the plugin at 0.2.0 in Claude Code; refresh behaviour of installed copies unknown",
+        "anchors": [
+          "H2",
+          "H4"
+        ]
+      },
+      "`npm run package:openai` not run; ChatGPT/Codex never tested",
+      {
+        "text": "render-reference.ts change checked only by reading output; repo has no tests, no typecheck shown",
+        "anchors": [
+          "H11"
+        ]
+      },
+      {
+        "text": "Backend tests skip: credits short between preview and redeem, partial add, TTL expiry, execute() failure after id consumed",
+        "anchors": [
+          "H5",
+          "H6"
+        ]
+      },
+      "Backend full suite not run for option B, only src/core/mcp plus hooks",
+      "Rollout window (0.1.0 clients after promote, 0.2.0 before) reasoned from code as failing closed; not run",
+      "meta.session agent/model: batch-two question unanswered at submit; left as unknown rather than inferred"
+    ]
+  },
+  "evaluated": [
+    {
+      "question": "The 0.2.0 bump lands in plugin/plugin.json and plugin/.claude-plugin/plugin.json only. Do any other files carry a plugin version that should move with it (the marketplace manifests, the OpenAI/Codex package config read by scripts/package-openai.sh, package.json)? And does the session or the repo show what the manifest version actually drives for installed clients (update detection, cache key), or is that unknown?",
+      "answer": "OTHER VERSION-BEARING FILES (inference from reading the repo, not from the session):\n- .claude-plugin/marketplace.json: no `version` field. Its plugin entry is name, source \"./plugin\" and description only.\n- .agents/plugins/marketplace.json (Codex): no `version` field. It has name, source {local, ./plugin}, policy and category.\n- OpenAI/Codex package: there is no separate config. scripts/package-openai.sh zips plugin/ and leaves out mcp.json, .mcp.json and .claude-plugin/*. So plugin/plugin.json, now 0.2.0, IS the version the ZIP carries. Nothing else needs to move for it.\n- package.json: \"version\": \"0.1.0\", unchanged. It is the private npm package for the scripts (`\"private\": true`), not a plugin manifest. Nothing in the repo reads it as the plugin version.\n- scripts/generate-references.ts:18: `new Client({ name: \"seerly-mcp-references\", version: \"0.1.0\" })` is the MCP client name the script sends, not the plugin version.\n- A grep for \"version\" across the repo (excluding .intent) finds only those four places. Both plugin manifests are at 0.2.0.\n\nWHAT THE VERSION DRIVES, per the session (all from a web-fetch subagent's report on Anthropic's docs, read 2026-11-13, entry 6155; quoting the subagent, not the pages directly):\n- Pre-submission check: \"`description`, `author`, `version` missing: warning. Raise `version` with each release.\"\n- Checklist item: \"`version` raised each release\".\n- Directory updates: \"merge to the tracked branch. The directory scans it. Raise `version` in `plugin.json`.\"\n- Directory publishing default: \"An Anthropic reviewer publishes each version.\" Other settings: \"The reviewer publishes only the first version\" or \"You publish the first version.\"\n- The session carried this into its submission pack (plans/2026-11-13-claude-directory-submission.md:114): \"Updates: bump `version` in `plugin/.claude-plugin/plugin.json` and merge to `main`.\" That is why both manifests moved.\n\nUNKNOWN:\n- Whether Claude Code or Codex use the manifest version for update detection or as a cache key on clients that installed from the self-hosted marketplace. The session never researched or tested it.\n- The plugin is not yet listed in the directory, so the directory's per-version review does not apply to anyone today.",
+      "anchors": [
+        "H2",
+        "H4"
+      ]
+    },
+    {
+      "question": "SKILL.md now gives the model one recovery rule: 'if it has expired, preview again'. From the backend work in the session, what does add_prompts / generate_article return when the previewId is already used, was made under a different token, is unknown, or when the stored plan no longer holds at redeem time (credits spent or prompt limit reached since the preview)? Does the action re-check quota/credits at redeem, and is there any case where the model gets an error the skill gives it no rule for? If the transcript does not cover a case, say which.",
+      "answer": "Mostly from the backend code on feat/mcp-write-previews (airo-backend-mcp-annotations). That is inference from code; I read it now. The session shows the tests and mutation runs, not a discussion of each case.\n\nCASE BY CASE (src/core/mcp/tools/write-tools.ts):\n- previewId unknown, already used, expired, made under a different access token, or made for the other write: all identical.\n  - `take()` hashes tool + token + id into the Redis key and does GETDEL, so every one of these is a miss (write-preview-store.service.ts:46-54).\n  - The action returns the error \"That previewId is unknown, already used or expired. Call preview_<tool> again and show the user the new preview.\" (write-tools.ts:107-111).\n  - The model cannot tell these cases apart. The error text itself gives the same instruction as the skill's \"preview again\".\n- The previewed project is no longer on the connection: error \"The previewed project is not on this connection. Preview the change again on the project you want.\" (write-tools.ts:112-113; project-for-args.ts:35-37). The message carries its own rule.\n\nRE-CHECK AT REDEEM: YES. `runPlan(await spec.plan(...))` re-runs the whole plan with the stored args (write-tools.ts:114-128). The comment there: \"The plan is worked out again at action time, so a limit reached since the preview still stops it.\"\n- generate_article (generate-article.tool.ts:69-112):\n  - re-reads plan limits and the latest strategy;\n  - blocks with \"An article costs X credits and Y are left. Credits can be bought in the Seerly app.\" or \"Seerly did not report the article's credit cost...\".\n- add_prompts (add-prompts.tool.ts:68-108):\n  - re-reads tracked prompts and the limit, and recomputes the selection;\n  - blocks only when nothing is left to add: \"The plan's prompt limit is reached.\" or \"Every prompt is already tracked.\"\n- A blocked redeem returns `{cannotProceed: <reason>, ...preview}` with isError true (write-tools.ts:130-135).\n\nCASES THE SKILL HAS NO RULE FOR (inference):\n1. Blocked at redeem.\n   - The previewId is already consumed (GETDEL runs before the re-plan), so the model must preview again.\n   - The skill's nearest rule, \"A plan or subscription message means the user's plan does not include it: tell them, and do not retry\", fits the prompt-limit case. It does not fit credits that ran out since the preview.\n2. Partial add_prompts. If room shrank but is not zero, the action saves a SUBSET of what the user agreed to, with no block and no re-ask. The skill says nothing about reporting the difference.\n3. generate_article cost drift. If the credit cost changed between preview and redeem and credits still cover it, the action runs at the new cost without re-asking.\n4. execute() failure. If the backend write itself fails (`outcome.kind !== \"ok\"`, write-tools.ts:124-127), the model gets `errorResult(reason)` and the previewId is already spent. There is no skill rule.\n5. The preview itself blocked. `preview_*` returns cannotProceed and no previewId (write-tools.ts:70). There is no explicit skill rule, though the reason text is shown.\n\nWHAT THE SESSION ACTUALLY TESTED (write-tools.spec.ts test names; 10 pass):\n- \"preview_add_prompts hands out no previewId once the plan's prompt limit is reached\"\n- \"add_prompts saves nothing when the prompt limit was reached after the preview\"\n- \"preview_generate_article refuses when credits are short, and hands out no previewId\"\n- \"a write without a previewId Seerly handed out changes nothing\"\n- \"a previewId acts once, so a repeated call does not write twice\"\n- \"a previewId opens only the write and the connection it was made for\"\n\nNOT tested, going by the names:\n- credits running short between preview and redeem;\n- the partial-add path;\n- TTL expiry (the fake Redis's handling of EX is not shown);\n- an execute() failure after the id is consumed;\n- the out-of-scope project at redeem.\n\nNone of these cases was discussed with the user.",
+      "anchors": [
+        "H5",
+        "H6",
+        "H7",
+        "H8"
+      ]
+    },
+    {
+      "question": "Rollout window: once the backend deploys, a client still holding the 0.1.0 skill text sends confirm=true to an action that only takes previewId; until it deploys, the 0.2.0 text names preview_* tools prod lacks. Was a transition considered in the session (backend briefly accepting both, or merging plugin and backend together), and does the session show whether installed plugins pick up main automatically or only on a manual update? If not covered, say so.",
+      "answer": "TRANSITION: not considered in the session.\n- The backend dropped `confirm` outright. Assistant at 6781: \"Source changes are in, with no `confirm` left outside the tests.\"\n- No dual-accept window, and no plan to merge plugin and backend together, appears anywhere.\n- The only ordering is sequential, written by the assistant into the submission pack (plans/2026-11-13-claude-directory-submission.md):\n  - line 9: backend PR \"merged, deployed and promoted\";\n  - line 10: the seerly-mcp PR \"merged after the backend is on prod\".\n  - The user did not discuss it.\n- Deploy mechanics from earlier in the session: merging the backend deploys to the green staging slot, and a separate promote takes it to prod. The window opens at promote and lasts until the plugin is merged AND clients refresh.\n\nDO INSTALLED PLUGINS PICK UP MAIN AUTOMATICALLY? Not covered.\n- The session's research (early on) says a self-hosted marketplace is published \"by pushing it. There is no review step. Users run `claude plugin marketplace add <source>`, then `claude plugin install name@marketplace`\" (entries 71/73), and the Codex equivalent is `codex plugin marketplace add`. It never says whether installed copies refresh on their own or need a manual update.\n- Directory listings, per the subagent at 6155: \"An Anthropic reviewer publishes each version\" by default. But the plugin is not yet submitted, so today every install is from the self-hosted marketplace (the user installed it from the public repo in an earlier context).\n- The OpenAI/ChatGPT portal takes an uploaded ZIP, so that copy changes only on a manual re-upload. Not done.\n\nWHAT THE WINDOW COSTS (inference from the backend code, not discussed in the session):\n- Tool schemas and descriptions come live from seerly.app, not from the plugin. After the backend deploys:\n  - a 0.1.0 client still sees `preview_*` in tools/list;\n  - it sees an action whose only argument is a required `previewId`;\n  - it sees a description saying \"Runs only with a previewId from preview_<tool>\".\n- A stale `confirm=true` call carrying the old arguments has no previewId, so it fails input validation and writes nothing. That fails closed: worse UX, no data risk.\n- Before the backend deploys, a 0.2.0 skill naming `preview_*` gets tool-not-found. The live `add_prompts` / `generate_article` still preview when called without `confirm`, so that also fails safe.\n- Both are reasoned from code. Neither was run.",
+      "anchors": [
+        "H1",
+        "H3",
+        "H6",
+        "H7",
+        "H8"
+      ]
+    }
+  ],
+  "unresolved": [
+    {
+      "question": "For meta.session: which agent (client) and which model ran session 253ba429-c3a3-455e-93f2-127553ef0255, as read in the transcript itself (e.g. the model field on assistant entries)? If the transcript does not record one of them, say so rather than guessing.",
+      "disposition": "unanswered"
+    }
+  ]
+}
