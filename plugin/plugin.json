@@ -15,7 +15,7 @@
       "interface": {
         "displayName": "Seerly",
         "shortDescription": "Your brand's visibility in AI answers, and what to do about it.",
-        "longDescription": "Ask how ChatGPT, Gemini, Claude, Perplexity and Google AI Overviews mention, cite and describe your brand against competitors. Build a pitch from your numbers, plan the prompts to track, write briefs that close citation gaps, find the pages to fix for E-E-A-T, and shortlist the publications worth a placement. Needs a Seerly account.",
+        "longDescription": "Ask how ChatGPT, Perplexity, Google AI Overviews and Gemini (plus Claude on Enterprise plans) mention, cite and describe your brand against competitors. Build a pitch from your numbers, plan the prompts to track, write briefs that close citation gaps, find the pages to fix for E-E-A-T, and shortlist the publications worth a placement. Needs a Seerly account.",
         "developerName": "Seerly",
         "category": "Productivity",
         "capabilities": ["Read", "Write"],
