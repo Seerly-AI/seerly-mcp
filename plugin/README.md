@@ -1,6 +1,6 @@
 # Seerly
 
-Seerly measures how AI engines (ChatGPT, Gemini, Claude, Perplexity and Google AI Overviews) mention, cite and describe your brand, against the competitors you track. This plugin connects Claude to your Seerly account, so you can ask about your own visibility data and turn it into pitches, prompt plans, content briefs, page fixes and PR shortlists.
+Seerly measures how AI engines (ChatGPT, Perplexity, Google AI Overviews and Gemini, plus Claude on Enterprise plans) mention, cite and describe your brand, against the competitors you track. This plugin connects Claude to your Seerly account, so you can ask about your own visibility data and turn it into pitches, prompt plans, content briefs, page fixes and PR shortlists.
 
 ## What it includes
 

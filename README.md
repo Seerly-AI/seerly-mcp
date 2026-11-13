@@ -1,6 +1,6 @@
 # Seerly plugin
 
-Seerly for Claude and for Codex and ChatGPT. Ask how AI engines (ChatGPT, Gemini, Claude, Perplexity, Google AI Overviews) mention, cite and describe your brand, and turn the answers into pitches, prompt plans, content briefs, page fixes and PR shortlists.
+Seerly for Claude and for Codex and ChatGPT. Ask how AI engines (ChatGPT, Perplexity, Google AI Overviews and Gemini, plus Claude on Enterprise plans) mention, cite and describe your brand, and turn the answers into pitches, prompt plans, content briefs, page fixes and PR shortlists.
 
 The plugin holds no server code. It points at Seerly's MCP server, `https://seerly.app/api/mcp`, and adds a skill that teaches the model the tools. Sign-in is your Seerly login (OAuth); the plugin only ever sees your own projects.
 
