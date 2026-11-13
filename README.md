@@ -37,13 +37,13 @@ url = "https://seerly.app/api/mcp"
 | Job | Tools |
 |---|---|
 | Pitch or status update | `get_brand_snapshot`, `get_latest_brand_report`, `find_opportunities`, `rank_publications` |
-| Prompts to track | `get_prompt_ideas`, then `add_prompts` |
-| Content briefs and articles | `get_brief_inputs`, then `generate_article` |
+| Prompts to track | `get_prompt_ideas`, then `preview_add_prompts` and `add_prompts` |
+| Content briefs and articles | `get_brief_inputs`, then `preview_generate_article` and `generate_article` |
 | Pages to fix (E-E-A-T) | `get_pages_to_fix` |
 | PR and paid placements | `rank_publications` |
 | Anything narrower | `get_overview`, `get_visibility`, `get_citations`, `get_sentiment` and the other `get_*` tools |
 
-`add_prompts` and `generate_article` change your data, and `generate_article` spends content credits. Both show a preview first and act only when you confirm.
+`add_prompts` and `generate_article` change your data, and `generate_article` spends content credits. Each runs only on the id of a preview you have seen (`preview_add_prompts`, `preview_generate_article`), once, within 15 minutes.
 
 ## Layout
 

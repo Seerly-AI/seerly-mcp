@@ -31,7 +31,7 @@ export function renderReference(tool: ListedTool): string {
     `# ${tool.name}${tool.title ? `: ${tool.title}` : ""}`,
     "",
     tool.annotations?.readOnlyHint === false
-      ? "**Changes data.** Call without `confirm` for a preview; call with `confirm=true` only after the user agrees."
+      ? `**Changes data.** Takes a previewId from \`preview_${tool.name}\`; call it only after the user agrees to that preview.`
       : "Read-only.",
     "",
     tool.description ?? "",
