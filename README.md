@@ -51,6 +51,7 @@ url = "https://seerly.app/api/mcp"
 .claude-plugin/marketplace.json   Claude marketplace
 .agents/plugins/marketplace.json  Codex marketplace
 plugin/
+  README.md                       the listing description (what the plugin sends and to where)
   .claude-plugin/plugin.json      Claude manifest
   .mcp.json                       Claude's MCP config
   plugin.json                     Codex and ChatGPT manifest
