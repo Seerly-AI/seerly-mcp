@@ -1,0 +1,15 @@
+{
+  "name": "seerly",
+  "description": "Seerly's plugin: your brand's visibility in AI answers, from your Seerly account.",
+  "owner": {
+    "name": "Seerly",
+    "url": "https://seerly.app"
+  },
+  "plugins": [
+    {
+      "name": "seerly",
+      "source": "./plugin",
+      "description": "Your brand's AI search visibility from Seerly: citations, share of voice, sentiment, gaps, briefs, page fixes and PR placements."
+    }
+  ]
+}

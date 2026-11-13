@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "seerly": {
+      "type": "http",
+      "url": "https://seerly.app/api/mcp"
+    }
+  }
+}

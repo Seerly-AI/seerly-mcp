@@ -1,0 +1,13 @@
+{
+  "name": "seerly",
+  "version": "0.1.0",
+  "description": "Your brand's AI search visibility from Seerly: citations, share of voice, sentiment, gaps, briefs, page fixes and PR placements.",
+  "author": {
+    "name": "Seerly",
+    "url": "https://seerly.app"
+  },
+  "homepage": "https://seerly.app",
+  "repository": "https://github.com/Seerly-AI/seerly-mcp",
+  "license": "MIT",
+  "keywords": ["seo", "geo", "ai-visibility", "citations", "brand-monitoring"]
+}

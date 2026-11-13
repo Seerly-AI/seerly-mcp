@@ -1,0 +1,20 @@
+{
+  "name": "seerly-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Seerly plugin for Claude and Codex/ChatGPT: manifests, the MCP server URL and the skill.",
+  "scripts": {
+    "references": "tsx scripts/generate-references.ts",
+    "package:openai": "sh scripts/package-openai.sh"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@types/node": "22.10.2",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}
