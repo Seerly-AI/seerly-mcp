@@ -11,7 +11,7 @@ Seerly measures how AI engines (ChatGPT, Perplexity, Google AI Overviews and Gem
 
 - Every tool call goes over HTTPS to `https://seerly.app/api/mcp` with your Seerly access token, and returns data from your own Seerly projects. The plugin sends nothing anywhere else.
 - You sign in with your Seerly login (OAuth). Claude keeps the access token; it never sees your password.
-- Two tools change data. `add_prompts` adds prompts to tracking, which counts against your plan's prompt limit. `generate_article` writes an article, which spends content credits. Each shows a preview first and acts only after you confirm.
+- Two tools change data. `add_prompts` adds prompts to tracking, which counts against your plan's prompt limit. `generate_article` writes an article, which spends content credits. Each runs only after its preview tool (`preview_add_prompts`, `preview_generate_article`) has shown you what will change and you agree: the action takes that preview's id, once, within 15 minutes.
 
 ## Requirements
 

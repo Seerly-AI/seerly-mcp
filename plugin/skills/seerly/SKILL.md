@@ -29,13 +29,13 @@ Structure it as: where the brand stands (with the competitor that leads), what i
 
 1. `get_prompt_ideas`: current prompts with volume and keyword tier, the scout's recommended changes, uncovered keyword clusters, and what AI engines actually searched.
 2. Draft prompts the way a buyer would ask an AI engine; mix fat-head and long-tail anchors.
-3. Let the user pick, then `add_prompts`.
+3. Let the user pick, then `preview_add_prompts`; show its preview, and `add_prompts` with its `previewId` once they agree.
 
 ### A content brief, then the article
 
 1. `find_opportunities`: choose a gap and take its `topicId`.
 2. `get_brief_inputs` with that `topicId`: the questions, the pages cited instead, target keywords, formats that get cited, the brand voice, and what is already planned.
-3. Write the brief. If the user wants Seerly to draft it, `generate_article`.
+3. Write the brief. If the user wants Seerly to draft it, `preview_generate_article` for the credit cost, then `generate_article` with its `previewId` once they agree.
 
 ### Pages to fix
 
@@ -57,7 +57,7 @@ Every tool's arguments are in [references/](references/).
 
 ## Rules
 
-- `generate_article` spends content credits and `add_prompts` adds tracked prompts. Call each without `confirm` first and show the user the preview (the credit cost, or which prompts are added and skipped). Call again with the same arguments and `confirm=true` only after the user agrees.
+- `generate_article` spends content credits and `add_prompts` adds tracked prompts. Each acts only on a `previewId` from its preview tool (`preview_generate_article`, `preview_add_prompts`). Show the user the preview (the credit cost, or which prompts are added and skipped), and call the action with that `previewId` only after they agree. A `previewId` works once, for 15 minutes; if it has expired, preview again.
 - Anything under `unavailable` is not covered: say so, and never estimate it.
 - A plan or subscription message means the user's plan does not include it: tell them, and do not retry.
 - "Still computing" means an analysis is running: say so, and do not poll.
