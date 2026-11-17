@@ -1,0 +1,36 @@
+# Publishes npm/ as @seerly/mcp when a tag npm-v<version> is pushed from main.
+# npm trusts this workflow by name (trusted publishing), so no token is stored here.
+name: Publish npm package
+
+on:
+  push:
+    tags: ["npm-v*"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: npm
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: npm that supports trusted publishing
+        run: npm install -g npm@11.21.1
+      - name: Tag matches the package version
+        run: test "npm-v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm ci
+      - run: npm run build
+      - name: Ship the licence with the package
+        run: cp ../LICENSE .
+      - run: npm publish
+        env:
+          # First release only: npm cannot trust a workflow for a package that does not exist yet.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

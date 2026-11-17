@@ -1,0 +1,47 @@
+{
+  "name": "@seerly/mcp",
+  "version": "0.1.0",
+  "description": "Seerly's MCP server for apps that run local (stdio) servers: your brand's visibility in ChatGPT, Perplexity, Google AI Overviews and Gemini.",
+  "type": "module",
+  "bin": {
+    "seerly-mcp": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.6.3"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seerly-AI/seerly-mcp.git",
+    "directory": "npm"
+  },
+  "homepage": "https://seerly.app",
+  "bugs": "https://github.com/Seerly-AI/seerly-mcp/issues",
+  "license": "MIT",
+  "author": "Seerly (https://seerly.app)",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "seerly",
+    "geo",
+    "ai-visibility",
+    "citations",
+    "brand-monitoring"
+  ]
+}
