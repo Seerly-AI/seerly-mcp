@@ -30,6 +30,8 @@ url = "https://seerly.app/api/mcp"
 
 **claude.ai and ChatGPT:** add Seerly from the connector or plugin directory, or add a custom connector with the URL above.
 
+**Apps that run only local (stdio) servers:** use the npm package, `npx -y @seerly/mcp`. Setup is in [npm/README.md](npm/README.md).
+
 **One project only:** use `https://seerly.app/api/mcp/<your-domain>` and every tool works on that project.
 
 ## What it can do
@@ -58,6 +60,7 @@ plugin/
   mcp.json                        Codex's MCP config
   skills/seerly/SKILL.md          job recipes and rules
   skills/seerly/references/       every tool's arguments, generated
+npm/                              @seerly/mcp: a stdio bridge to the same server, with browser sign-in
 scripts/
 ```
 
@@ -65,3 +68,4 @@ scripts/
 
 - `SEERLY_TOKEN=<access token> npm run references` rewrites `references/` from the live server's tool list (set `SEERLY_MCP_URL` to use a staging slot). Run it whenever the tools change.
 - `npm run package:openai` builds `dist/seerly-openai.zip` for the OpenAI plugin portal. It leaves out the MCP config, since the portal registers the server URL itself.
+- To release `@seerly/mcp`, bump `version` in `npm/package.json`, merge to main, then push the tag `npm-v<version>` from main. The `publish-npm.yml` workflow publishes it; npm trusts that workflow, so nobody publishes from a laptop.
