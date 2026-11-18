@@ -1,0 +1,607 @@
+{
+  "schema_version": "0.1",
+  "meta": {
+    "id": "seerly-mcp/feat-npm-package-9c22abb",
+    "repo": "Seerly-AI/seerly-mcp",
+    "commit_range": {
+      "base_sha": "acda75eeb20821728a63fd8f2d6c22967c28c0b7",
+      "head_sha": "9c22abbb17ef19e7b5174324bd30107830068e5a"
+    },
+    "session": {
+      "agent": "Claude Code",
+      "model": "claude-opus-5-5",
+      "session_ids": [
+        "ddb20e4c-94da-44b0-a203-1b4f99927d7d"
+      ],
+      "started_at": "2026-11-17T05:17:40.809Z",
+      "ended_at": "2026-11-17T11:47:56.354Z"
+    },
+    "generated_by": {
+      "pipeline": "review-assist",
+      "version": "0.1"
+    },
+    "generated_at": "2026-11-17T12:00:00Z",
+    "interview": {
+      "rounds": 14,
+      "questions_asked": 14,
+      "unresolved": 6,
+      "author_attested": 14,
+      "developer_attested": 0,
+      "unanswered": 0
+    }
+  },
+  "problem": {
+    "statement": "Apps that run only local (stdio) MCP servers cannot reach Seerly's URL-only MCP server, and no npm package exists.",
+    "origin": "stated_upfront",
+    "user_asks": [
+      "Lets try to publish the seerly mcp also as an npm package.",
+      "We should use the github action to publish the new version. Let me know what is needed. we need to publish to npmjs . Is it easy to migrate ?",
+      "https://www.npmjs.com/org/seerly check if it owned by me",
+      "Lets try and upload it in the org now",
+      "make sure to merge the changes to the main branch",
+      "I have added the token"
+    ],
+    "out_of_scope": [
+      "Backend changes: OAuth already supports registration, S256 PKCE, public clients, loopback redirects",
+      "Trusted-publisher setup, secret deletion, token revocation: manual, after the first release",
+      "Removing the NODE_AUTH_TOKEN line: a later commit",
+      "Revoke-access UI"
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "assumption": "Backend OAuth server keeps dynamic client registration and accepts loopback redirects on any port",
+      "impact_if_wrong": "Every browser sign-in fails",
+      "how_to_verify": "curl https://seerly.app/.well-known/oauth-authorization-server; read airo-backend src/core/oauth/oauth-redirect-uri.ts (redirectUriMatches)",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H9",
+        "H12"
+      ]
+    },
+    {
+      "id": "A2",
+      "assumption": "Backend rotates refresh tokens per use and revokes the whole family on reuse",
+      "impact_if_wrong": "Two bridges refreshing at once revoke the sign-in; both reopen the browser",
+      "how_to_verify": "Run two bridges against one URL; force a refresh in both",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H11"
+      ]
+    },
+    {
+      "id": "A3",
+      "assumption": "A staging slot's auth server shares the MCP URL's origin, as prod's does",
+      "impact_if_wrong": "Sign-in refused for that SEERLY_MCP_URL",
+      "how_to_verify": "curl <staging origin>/.well-known/oauth-authorization-server; compare authorization_endpoint origin",
+      "confidence": "unverified",
+      "anchors": [
+        "H12",
+        "H14"
+      ]
+    },
+    {
+      "id": "A4",
+      "assumption": "Bridge host can open a browser and receive a 127.0.0.1 callback",
+      "impact_if_wrong": "Headless or SSH users cannot sign in",
+      "how_to_verify": "Run npx -y @seerly/mcp over SSH with no credentials",
+      "confidence": "unverified",
+      "anchors": [
+        "H9",
+        "H13"
+      ]
+    },
+    {
+      "id": "A5",
+      "assumption": "NPM_TOKEN is a granular publish token that bypasses 2FA",
+      "impact_if_wrong": "First publish fails with 403 or OTP required",
+      "how_to_verify": "Actions log of the first npm-v0.1.0 run",
+      "confidence": "unverified",
+      "anchors": [
+        "H1"
+      ]
+    },
+    {
+      "id": "A6",
+      "assumption": "Repo and package are public; repository.url matches the GitHub repo exactly",
+      "impact_if_wrong": "Trusted publishing and provenance fail, visible only at publish time",
+      "how_to_verify": "Compare npm/package.json repository.url with the trusted-publisher entry on npmjs.com",
+      "confidence": "unverified",
+      "anchors": [
+        "H7",
+        "H1"
+      ]
+    },
+    {
+      "id": "A7",
+      "assumption": "Release tags are pushed only from main",
+      "impact_if_wrong": "A tag on any branch publishes, with NPM_TOKEN for 0.1.0",
+      "how_to_verify": "Check repo tag rulesets; publish-npm.yml enforces nothing",
+      "confidence": "unverified",
+      "anchors": [
+        "H1",
+        "H4"
+      ]
+    },
+    {
+      "id": "A8",
+      "assumption": "Desktop apps tolerate initialize blocking for the whole browser sign-in",
+      "impact_if_wrong": "App times out initialize; user restarts it after signing in",
+      "how_to_verify": "First run in Claude Desktop or Cursor with empty ~/.seerly/mcp; take over 60 s to consent",
+      "confidence": "unverified",
+      "anchors": [
+        "H8"
+      ]
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "Who carries the post-release steps: trusted publisher within its 2-day window, delete secret, revoke token, drop NODE_AUTH_TOKEN line?",
+      "context": "Planned only in the session; nothing in the repo tracks them",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H1"
+      ]
+    }
+  ],
+  "approach": {
+    "requirements": [
+      {
+        "text": "Publish new versions through GitHub Actions",
+        "source": "user: \"We should use the github action to publish the new version\""
+      },
+      {
+        "text": "Publish to npmjs under the seerly org",
+        "source": "user: \"Lets try and upload it in the org now\""
+      },
+      {
+        "text": "Merge to main; cut the release tag from main",
+        "source": "user: \"make sure to merge the changes to the main branch\""
+      },
+      {
+        "text": "No publish from a laptop, first release included",
+        "source": "user's standing deploy-only-from-git rule, cited in session"
+      }
+    ],
+    "trials": [
+      {
+        "what": "Wrap mcp-remote (Option B, about 20 lines)",
+        "outcome": "Rejected before building",
+        "why_abandoned": "Changed owners in 2026, 0.2 to 0.16 in months, 2025 command-injection CVE in its sign-in flow; Seerly logins would ride someone else's releases"
+      },
+      {
+        "what": "Unscoped package name seerly-mcp",
+        "outcome": "Not taken",
+        "why_abandoned": "User created and confirmed the seerly npm org"
+      },
+      {
+        "what": "Publish from a company npm account",
+        "outcome": "No such account on the registry",
+        "why_abandoned": "User chose a personal account to own the org; company account can join later"
+      },
+      {
+        "what": "Tokenless OIDC-only first release",
+        "outcome": "Impossible",
+        "why_abandoned": "Trusted publishing and npm trust require the package to exist"
+      },
+      {
+        "what": "Manual first publish from a laptop",
+        "outcome": "Not done",
+        "why_abandoned": "Deploy-only-from-git rule; workflow does the first publish too"
+      },
+      {
+        "what": "npm 11.21.2 in the workflow",
+        "outcome": "Pinned 11.21.1 instead",
+        "why_abandoned": "11.21.2 under two weeks old"
+      },
+      {
+        "what": "README line on revoking access",
+        "outcome": "Written, then removed",
+        "why_abandoned": "No revoke UI exists in seerly-front"
+      }
+    ],
+    "adopted": {
+      "summary": "New npm/ package @seerly/mcp: own stdio-to-Streamable-HTTP bridge on @modelcontextprotocol/sdk, browser OAuth via a loopback callback, credentials in ~/.seerly/mcp; tag-triggered GitHub Actions publish with provenance.",
+      "rationale": "- Repo holds no server code; the package can only relay to https://seerly.app/api/mcp\n- Backend already advertises registration, S256 PKCE, token auth none: no backend change\n- SDK does registration, PKCE and refresh; provider only stores and opens the browser\n- Credentials re-read from disk on every use: backend rotates refresh tokens\n- Callback listener lives for the process: redirect URL needed before any 401\n- Tag-version check stops a mismatched release\n- Exact pins match the repo root (SDK 1.32.2, TypeScript, @types/node)"
+    }
+  },
+  "tour": [
+    {
+      "id": "T1",
+      "title": "Stdio bridge to the remote server",
+      "role": "core",
+      "what": "- Relays each stdio message to Seerly over Streamable HTTP, and each reply back (`Bridge`)\n- Waits on one shared browser sign-in after an `UnauthorizedError`, then resends (`signIn`, `signingIn`)\n- Answers any other failed request with a JSON-RPC InternalError (`answerWithError`)\n- Sets the protocol version agreed in `initialize` on the remote transport (`deliver`)\n- Wires URL, callback server, store, provider and bridge; exits when stdin ends (`cli.ts`)",
+      "why": "- Repo is plugin-only; the server lives in airo-backend at /api/mcp\n- Own bridge on the official SDK rather than mcp-remote (see trials)\n- Later requests must carry the negotiated protocol version",
+      "anchors": [
+        {
+          "id": "H8",
+          "path": "npm/src/bridge.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 90
+          }
+        },
+        {
+          "id": "H10",
+          "path": "npm/src/cli.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 21
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "A request whose sign-in is abandoned is never answered; no timeout"
+    },
+    {
+      "id": "T2",
+      "title": "Pinned-project mode and server URL",
+      "role": "supporting",
+      "what": "- Appends a URL-encoded project argument, pinning every tool to it (`resolveServerUrl`)\n- Takes the base from `SEERLY_MCP_URL`, else https://seerly.app/api/mcp; strips trailing slashes",
+      "why": "- Mirrors the remote `https://seerly.app/api/mcp/<domain>` form\n- Staging slots reachable without a rebuild",
+      "anchors": [
+        {
+          "id": "H14",
+          "path": "npm/src/server-url.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 10
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Pinned URL gets its own credential file, client and sign-in"
+    },
+    {
+      "id": "T3",
+      "title": "Browser sign-in and local credentials",
+      "role": "core",
+      "what": "- Listens on 127.0.0.1, random port, `/callback`, for the bridge's lifetime (`CallbackServer`)\n- Accepts only the latest sign-in's `state`; hands its code to whoever waits\n- Registers as a public client (no secret) with that loopback redirect (`SeerlyOAuthProvider`)\n- Keeps the PKCE verifier in memory; persists client and tokens\n- Refuses authorization URLs outside the server's origin\n- Stores client and tokens in one 0600 file per server URL under `~/.seerly/mcp`, re-read on every use (`CredentialStore`)\n- Writes via temp file plus rename\n- Opens the browser via `open` / `rundll32` / `xdg-open`, no shell (`openBrowser`)",
+      "why": "- Backend rotates refresh tokens and revokes the family on reuse\n- Re-reading lets a second bridge see the newest pair\n- Backend accepts loopback redirects on any port: one stored client survives a new port per process\n- Redirect URL must exist before the first 401",
+      "anchors": [
+        {
+          "id": "H9",
+          "path": "npm/src/callback-server.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 85
+          }
+        },
+        {
+          "id": "H11",
+          "path": "npm/src/credential-store.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 43
+          }
+        },
+        {
+          "id": "H12",
+          "path": "npm/src/oauth-provider.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 95
+          }
+        },
+        {
+          "id": "H13",
+          "path": "npm/src/open-browser.ts",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 23
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Concurrent 401s each start a new authorization: new state, new verifier, another tab"
+    },
+    {
+      "id": "T4",
+      "title": "Package manifest, lockfile and build",
+      "role": "supporting",
+      "what": "- Declares `@seerly/mcp` 0.1.0 with bin `seerly-mcp` -> `dist/cli.js`; ships only `dist`\n- Publishes public with provenance; `repository.url` points at Seerly-AI/seerly-mcp, directory npm\n- Pins SDK, TypeScript, @types/node and engines to the repo root's values\n- Locks the tree `npm ci` builds in CI (`package-lock.json`)\n- Compiles strict ES2022/NodeNext from src to dist (`tsconfig.json`)",
+      "why": "- Trusted publishing matches `repository.url` exactly\n- Root package.json stays private\n- `npm ci` fails without the lockfile",
+      "anchors": [
+        {
+          "id": "H6",
+          "path": "npm/package-lock.json",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 1269
+          }
+        },
+        {
+          "id": "H7",
+          "path": "npm/package.json",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 47
+          }
+        },
+        {
+          "id": "H15",
+          "path": "npm/tsconfig.json",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 12
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "`engines >=20.11` inherited from root; npm/ code needs only >=20"
+    },
+    {
+      "id": "T5",
+      "title": "Tag-triggered publish workflow and release procedure",
+      "role": "core",
+      "what": "- Publishes `npm/` when any `npm-v*` tag is pushed\n- Fails unless the tag equals `npm-v` plus the package.json version\n- Installs npm 11.21.1; grants `id-token: write` for OIDC and provenance\n- Copies the root LICENSE into the package before publishing\n- Passes `NPM_TOKEN` as `NODE_AUTH_TOKEN`, meant for the first release only\n- Documents the release: bump version, merge, tag from main (root README)",
+      "why": "- npm cannot trust a workflow for a package that does not exist yet\n- Publishing from CI keeps the deploy-only-from-git rule\n- Tarball carries no licence without the copy",
+      "anchors": [
+        {
+          "id": "H1",
+          "path": ".github/workflows/publish-npm.yml",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 36
+          }
+        },
+        {
+          "id": "H4",
+          "path": "README.md",
+          "hunk": {
+            "old_start": 65,
+            "old_lines": 3,
+            "new_start": 68,
+            "new_lines": 4
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Nothing restricts the tag to main; token line stays until a follow-up commit"
+    },
+    {
+      "id": "T6",
+      "title": "Setup docs",
+      "role": "supporting",
+      "what": "- Points stdio-only apps to `npx -y @seerly/mcp` (root README)\n- Lists `npm/` in the repo layout\n- Gives the config snippet for Claude Desktop, Cursor and Windsurf (`npm/README.md`)\n- Documents the single-project argument, credentials folder and Node floor",
+      "why": "- npm/README ships in the tarball and shows on npmjs.com\n- No revoke-access line: the app has no revoke UI",
+      "anchors": [
+        {
+          "id": "H2",
+          "path": "README.md",
+          "hunk": {
+            "old_start": 30,
+            "old_lines": 6,
+            "new_start": 30,
+            "new_lines": 8
+          }
+        },
+        {
+          "id": "H3",
+          "path": "README.md",
+          "hunk": {
+            "old_start": 58,
+            "old_lines": 6,
+            "new_start": 60,
+            "new_lines": 7
+          }
+        },
+        {
+          "id": "H5",
+          "path": "npm/README.md",
+          "hunk": {
+            "old_start": 0,
+            "old_lines": 0,
+            "new_start": 1,
+            "new_lines": 33
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Snippets untried in any real app; 'readable only by you' checked on macOS only"
+    }
+  ],
+  "verification": {
+    "performed": [
+      {
+        "kind": "build",
+        "description": "cd npm && npm install --ignore-scripts && npm run build",
+        "result": "tsc clean; 7 files in dist; shebang present"
+      },
+      {
+        "kind": "manual",
+        "description": "cp ../LICENSE . && npm pack --dry-run",
+        "result": "@seerly/mcp@0.1.0, 10 files, 6.1 kB"
+      },
+      {
+        "kind": "manual",
+        "description": "E2E against prod: scratch stdio client spawning node npm/dist/cli.js, HOME in a scratch dir, real browser opener",
+        "result": "Initialized after 16 s; 26 tools; list_projects ok; tokens saved 0600 in a 0700 dir",
+        "evidence": "Earlier run reused the stored client_id on a new port"
+      },
+      {
+        "kind": "manual",
+        "description": "Backend OAuth check: curl prod authorization-server and protected-resource metadata; read oauth-redirect-uri.ts, oauth-client.service.ts, oauth-token.service.ts on origin/main",
+        "result": "Registration, S256, token auth none, any-port loopback, refresh rotation confirmed"
+      },
+      {
+        "kind": "manual",
+        "description": "gh secret list --repo Seerly-AI/seerly-mcp",
+        "result": "NPM_TOKEN present"
+      }
+    ],
+    "added_tests": [],
+    "not_verified": [
+      {
+        "text": "Publish workflow: no tag, no CI run, no publish; npm ci and npm 11.21.1 never ran",
+        "anchors": [
+          "H1",
+          "H6"
+        ]
+      },
+      "npx -y @seerly/mcp from the registry",
+      {
+        "text": "Pinned-project mode",
+        "anchors": [
+          "H14",
+          "H11"
+        ]
+      },
+      {
+        "text": "Refresh-token use, invalid_grant, re-registration after client expiry",
+        "anchors": [
+          "H11",
+          "H12"
+        ]
+      },
+      {
+        "text": "Two concurrent bridges on one credential file",
+        "anchors": [
+          "H11"
+        ]
+      },
+      {
+        "text": "Concurrent 401s in one process",
+        "anchors": [
+          "H8",
+          "H12"
+        ]
+      },
+      {
+        "text": "Denied or errored consent callback; expired state",
+        "anchors": [
+          "H9"
+        ]
+      },
+      {
+        "text": "Abandoned sign-in; app-side initialize timeout",
+        "anchors": [
+          "H8",
+          "H9"
+        ]
+      },
+      {
+        "text": "Windows rundll32 and Linux xdg-open openers; file modes on Windows",
+        "anchors": [
+          "H13",
+          "H11"
+        ]
+      },
+      {
+        "text": "Claude Desktop, Cursor, Windsurf config snippets",
+        "anchors": [
+          "H5"
+        ]
+      },
+      {
+        "text": "SEERLY_MCP_URL staging override",
+        "anchors": [
+          "H14"
+        ]
+      },
+      "No unit tests or lint for npm/",
+      "Passing E2E run does not record who clicked Allow"
+    ]
+  },
+  "diagrams": [
+    {
+      "title": "First request and browser sign-in",
+      "mermaid": "sequenceDiagram\n  participant App as Desktop app\n  participant Bridge as Bridge (stdio)\n  participant Seerly as seerly.app/api/mcp\n  participant Browser\n  participant CB as CallbackServer 127.0.0.1\n  App->>Bridge: initialize\n  Bridge->>Seerly: POST initialize\n  Seerly-->>Bridge: 401\n  Bridge->>Seerly: SDK registers client, builds auth URL\n  Bridge->>Browser: open consent page\n  Browser->>CB: GET /callback with code and state\n  CB-->>Bridge: code\n  Bridge->>Seerly: exchange code plus PKCE verifier for tokens\n  Bridge->>Seerly: POST initialize again\n  Seerly-->>Bridge: result\n  Bridge-->>App: result",
+      "caption": "initialize blocks for the whole sign-in; no timeout on the wait"
+    }
+  ],
+  "evaluated": [
+    {
+      "question": "npm/package.json sets `engines.node` to `>=20.11` and the README repeats it. The SDK says >=18 and @hono/node-server >=20. Where does 20.11 specifically come from?",
+      "answer": "Inference, but grounded in what the session read: it was inherited from the repo root.\n- At entry 42 the session ran `cat package.json`. The root seerly-mcp package.json declares `\"engines\": { \"node\": \">=20.11\" }`.\n- It also pins the same versions npm/package.json uses: `@modelcontextprotocol/sdk` 1.32.2, `@types/node` 22.10.2, `typescript` 5.6.3.\n- The session also read `scripts/generate-references.ts`, at the step it described as \"read existing script conventions\".\n- npm/package.json mirrors the root on all four.\n\nIn the root, 20.11 is justified: `scripts/generate-references.ts` uses `import.meta.dirname` and `import.meta.filename`, which arrived in Node 20.11.\n\nIn npm/ it is not specifically needed:\n- A grep of npm/src finds no `import.meta` use.\n- The code needs only ES2022 and `??=`.\n- The floor actually binding is the dependencies: SDK `>=18`, its `@hono/node-server` `>=20`.\n- So `>=20` would be the real minimum. 20.11 is a carried-over convention.\n\nThe session never stated a reason, and only Node 22.22.0 was exercised.",
+      "anchors": [
+        "H7",
+        "H5"
+      ]
+    },
+    {
+      "question": "For meta.session: which model does the transcript itself record for session ddb20e4c (the model id on the assistant turns), and what are the session's first and last timestamps? Only what the transcript shows; say so if it does not record a model.",
+      "answer": "Read directly from the transcript file the session transcript (`ddb20e4c-94da-44b0-a203-1b4f99927d7d.jsonl`).\n\nModel:\n- Every assistant entry that carries a `model` field says `\"model\":\"claude-opus-5-5\"`. That is all 238 occurrences, and no other model id appears.\n- The session's own environment block agrees: \"You are powered by the model named Opus 5.5. The exact model ID is claude-opus-5-5.\"\n- The local feature commit 9c22abb carries the trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.\n- Agent: Claude Code (session cwd: the seerly workspace).\n\nTimestamps (UTC):\n- First entry: 2026-11-17T05:17:40.809Z.\n- First user message (\"Lets try to publish the seerly mcp also as an npm package.\"): 2026-11-17T05:17:40.836Z, which is 10:47 IST.\n- Last entry as of this answer: 2026-11-17T11:47:56.354Z (17:17 IST). That is the assistant's Cowork reply, written after it launched the Intent Document agents.\n- The session is still live: the parent is waiting on these agents, so later entries (push, PR, merge, tag) may follow. They are not part of this diff."
+    }
+  ],
+  "unresolved": [
+    {
+      "question": "Sign-in has no timeout: if the user closes or ignores the browser tab, `signIn()` / `nextCode()` never settle, so the request that hit the 401 is never answered (the Bridge doc says \"the app never waits on it\"). Separately, desktop MCP clients time out `initialize` on their own (the TS SDK client default is 60 s). Did the session consider either: what the app does if initialize times out while the user is still on the consent page, and whether the bridge should give up on a sign-in after N minutes?",
+      "disposition": "unanswered",
+      "note": "The transcript does not settle this. Neither a bridge-side sign-in timeout nor desktop clients' own initialize timeouts was discussed. I grepped the session for timeout and initialize discussion; nothing turned up beyond what is listed here.\n\nWhat the session did see:\n- `initialize` blocks for the whole sign-in. The e2e test client had to raise its own connect timeout to accommodate it, from 600_000 ms to 1_800_000 ms.\n- Run 1 failed with \"McpError: MCP error -32001: Request timed out ... { timeout: 600000 }\". That was the test client's timeout while nobody consented. It was not a bridge timeout.\n- The assistant's response was a longer test window (\"this time with a 30-minute window to sign in\"), not a change to the bridge.\n- The passing run initialized after 16 s, well inside any client default.\n\nInference from code:\n- `CallbackServer.nextCode()` returns a promise that only settles when the callback is hit. There is no timer.\n- `Bridge.signIn()` waits on it indefinitely, so an ignored or closed tab leaves that request unanswered for the life of the process.\n- The \"the app never waits on it\" doc line in bridge.ts only covers requests that fail.\n- If the app times out initialize first, the bridge keeps listening. A sign-in completed later still saves tokens to `~/.seerly/mcp/`, so the next app start works without a prompt. That late recovery was not tested.\n- Whether clients such as Claude Desktop, Cursor or Windsurf time out initialize, and after how long, was never checked.\n\nOpen intent question for the developer: whether to add a give-up timeout. Not decided in the session.",
+      "anchors": [
+        "H8",
+        "H9"
+      ]
+    },
+    {
+      "question": "Two requests that both get a 401 in the same process each run a fresh SDK `auth()`: each calls `state()` (overwriting the expected state), `saveCodeVerifier()` (overwriting the verifier) and `redirectToAuthorization()` (opening a second browser tab). Only the latest tab can complete; earlier tabs show \"expired\"; and if the later auth lands after the first code arrives but before `finishAuth` reads the verifier, the token exchange fails PKCE. `signingIn` dedupes the wait but not the authorization start. Was this considered, and was deduping at `redirectToAuthorization`/`state()` discussed?",
+      "disposition": "unanswered",
+      "note": "Not discussed in the conversation. The only trace of the design is in the code the session wrote:\n- bridge.ts: \"One browser sign-in at a time: messages turned away meanwhile wait for the same one.\"\n- callback-server.ts: `expect()` uses `this.pending ??=`, with the comment \"its code goes to whoever already waits\". It also accepts \"only the state of the latest sign-in\".\nI grepped the session for the double-tab or PKCE race; nothing. Visible thinking is encrypted, so I cannot say whether it was weighed privately.\n\nInference, from reading SDK 1.32.2 `client/streamableHttp.js` `send()` (lines 328-348) and `auth.js`:\n- On a 401, each `send()` calls `auth()` itself. With no refresh token, that calls `provider.state()`, then `saveCodeVerifier()`, then `redirectToAuthorization()`.\n- So the reviewer's reading is right: two concurrent 401s open two tabs, the second state and verifier overwrite the first, and tab 1 gets \"This sign-in link has expired\".\n- The narrow PKCE failure is real too: a second auth that starts after code 1 arrives but before `finishAuth` reads the verifier would fail.\n- When it can occur: MCP clients send `initialize` alone and wait for its result. So the first sign-in has one request in flight.\n  - The concurrent case needs tokens to vanish mid-session while several tool calls are in flight, for example the refresh-family revocation the session flagged as a \"known limit\".\n  - With a valid refresh token the SDK refreshes rather than redirecting, so no tab opens.\n- Never exercised: every e2e run sent one request at a time.\n- Deduping at `state()` or `redirectToAuthorization` was not discussed.",
+      "anchors": [
+        "H8",
+        "H9",
+        "H12"
+      ]
+    },
+    {
+      "question": "publish-npm.yml says the tag is pushed from main, but any `npm-v*` tag on any commit publishes, and the job has no `environment:` that npm trusted publishing or a tag ruleset could pin. Was a guard discussed (a GitHub environment with a tag rule, a tag protection ruleset, or a step checking the tagged commit is on origin/main)? Is the gap accepted for 0.1.0 or a planned follow-up?",
+      "disposition": "unanswered",
+      "note": "No guard was discussed. Everything the session said on the subject:\n- User, mid-turn: \"make sure to merge the changes to the main branch\".\n- Assistant: \"Will do: this goes through a PR merged to main, and the release tag will be cut from main.\"\n- The README release bullet: \"push the tag `npm-v<version>` from main\". This is procedure, not enforcement.\n- The trusted-publishing docs fetched in the session noted only that \"Environments are optional; if you use GitHub environments, you can set an environment name in the configuration.\" The session did not act on it.\n- A grep for environment, ruleset, tag protection and on-main checks found nothing else.\n\nNot considered in the session:\n- A GitHub environment with a tag rule.\n- A tag protection ruleset.\n- A step checking the tagged commit is an ancestor of origin/main.\n\nThe only follow-ups the session planned were:\n- User adds the trusted publisher (Seerly-AI / seerly-mcp / publish-npm.yml).\n- Delete the secret and revoke the token.\n- \"I'll remove the token line from the workflow.\"\n\nInference from the workflow: any `npm-v*` tag pushed by anyone with write access publishes. For 0.1.0 that run also has `secrets.NPM_TOKEN`.\n\nWhether the gap is accepted for 0.1.0 or a follow-up was not stated; the developer needs to answer that.",
+      "anchors": [
+        "H1"
+      ]
+    },
+    {
+      "question": "`answerWithError` returns early for anything that is not a request, and nothing logs it, so a failed notification (e.g. `notifications/initialized` or a cancellation) vanishes without a stderr line. Deliberate, or an oversight?",
+      "disposition": "unanswered",
+      "note": "The transcript does not cover it: no discussion of notification failures or logging. What follows is inference from code.\n\nThe premise is only partly true. SDK 1.32.2 `StreamableHTTPClientTransport.send()` wraps everything in `catch (error) { this.onerror?.(error); throw error; }` (streamableHttp.js lines 427-429). The bridge's `remote.onerror` prints `Seerly MCP: <message>` for anything that is not an `UnauthorizedError`. So a notification whose POST fails gets a stderr line from that path, even though `answerWithError` returns early.\n\nWhat does go unlogged for a notification is a failure inside `Bridge.signIn()`:\n- Consent denied or an `error=` callback: `nextCode()` rejects.\n- `finishAuth()` failing on token exchange or PKCE. finishAuth throws without calling onerror.\n\nFor a request those reach the app as a JSON-RPC error; for a notification they vanish.\n\nThe early return itself matches JSON-RPC, since a notification cannot be answered. The bridge doc's rationale (\"so the app never waits on it\") only concerns requests. Whether the missing log on that path was deliberate is not stated.",
+      "anchors": [
+        "H8"
+      ]
+    },
+    {
+      "question": "CredentialStore keys the file by sha256 of the full server URL, project included, so each pinned project (`npx @seerly/mcp acme.com`) registers its own OAuth client and needs its own browser sign-in, against a backend cap of 20 registrations per window. Was per-URL (rather than per-origin) keying a decision in the session, or a side effect?",
+      "disposition": "unanswered",
+      "note": "Not a discussed decision. The conversation never mentions per-URL vs per-origin keying. The only statement is the doc comment the session wrote in credential-store.ts: \"The registered OAuth client and the tokens for one server URL\". Pinned mode was never run: every e2e run passed no project argument. So the separate registration and sign-in per pinned project was never observed.\n\nRelevant facts the session did read:\n- The backend caps dynamic registrations at `MAX_REGISTRATIONS_PER_WINDOW = 20` with a 1-hour `REGISTRATION_WINDOW_SECONDS` (origin/main oauth-client.service.ts).\n- An unused client is forgotten after 90 days.\n- The SDK sends a `resource` parameter. The unpinned authorize URL carried `resource=https://seerly.app/api/mcp`, and prod protected-resource metadata advertises `resource: https://seerly.app/api/mcp`.\n\nInference:\n- Per-URL keying is the simplest correct choice if the tokens are bound to the URL's resource.\n- Whether a pinned URL's metadata reports a different resource, and whether the backend checks it, was not verified. A grep of a local airo-backend checkout found `resource` stored on the grant, but no audience check. That checkout is not main.\n- So per-origin sharing may well be possible, but it is unverified.\n\nWhy it is per-URL is open: a decision or a side effect is not stated.",
+      "anchors": [
+        "H11",
+        "H14"
+      ]
+    },
+    {
+      "question": "npm/README.md says credentials are \"readable only by you\", which rests on mode 0600/0700 in CredentialStore; Node ignores those modes on Windows, so the file inherits the profile ACL there. Was Windows in scope for 0.1.0, and was that README claim checked against it?",
+      "disposition": "unanswered",
+      "note": "Windows was never discussed in the conversation, and the README claim was not checked against it. I grepped the session for Windows, win32 and ACL: the only hit is the code the session wrote. `open-browser.ts` has a `win32` branch using `rundll32 url.dll,FileProtocolHandler`, so Windows was nominally targeted. Nothing ran on Windows; all runs were macOS.\n\nThe \"readable only by you\" line was verified on macOS only. The e2e listing showed the credential file as `-rw-------` inside a `drwx------` `~/.seerly/mcp`.\n\nInference about Windows:\n- Node's `mode` on Windows only maps the write bit to read-only, so 0600 and 0700 do nothing there.\n- The file sits under `%USERPROFILE%\\.seerly\\mcp` and inherits the profile's ACL. By default that is the user, SYSTEM and Administrators, so the claim is roughly true for a default profile but does not hold strictly.\n\nWhether Windows is in scope for 0.1.0 is not stated; the developer needs to answer that.",
+      "anchors": [
+        "H5",
+        "H11",
+        "H13"
+      ]
+    }
+  ]
+}
