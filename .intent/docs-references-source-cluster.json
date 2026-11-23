@@ -1,0 +1,220 @@
+{
+  "schema_version": "0.1",
+  "meta": {
+    "id": "seerly-mcp-docs-references-source-cluster",
+    "repo": "Seerly-AI/seerly-mcp",
+    "commit_range": {
+      "base_sha": "af5fdc94262c3fa485e07ceca1a8720d9105dda2",
+      "head_sha": "0b32d2202bcb308078713acfdb076725cda785a1"
+    },
+    "session": {
+      "agent": "unknown (not reported in interview)",
+      "model": "unknown (not reported in interview)",
+      "session_ids": [
+        "d07e7e87-d861-4698-9119-b6f52a934f14"
+      ]
+    },
+    "generated_by": {
+      "pipeline": "review-assist",
+      "version": "0.1"
+    },
+    "generated_at": "2026-11-23T05:40:00Z",
+    "interview": {
+      "rounds": 9,
+      "questions_asked": 9,
+      "unresolved": 0,
+      "author_attested": 9,
+      "developer_attested": 0,
+      "unanswered": 0
+    }
+  },
+  "problem": {
+    "statement": "preview_add_prompts reference page missing `sourceCluster`, the per-prompt input backend PR #340 added to add_prompts",
+    "origin": "stated_upfront",
+    "user_asks": [
+      "Who regenerates seerly-mcp plugin/skills/seerly/references/preview_add_prompts.md after deploy?",
+      "the PR is merged. Lets now merge the mcp changes as well and update the docs.. Don't we need separate PRs for them ?"
+    ],
+    "out_of_scope": [
+      "MCP server code: shipped in seerly-backend PR #340"
+    ]
+  },
+  "assumptions": [
+    {
+      "id": "A1",
+      "assumption": "Prod serves the same tools/list as merged backend main 01a60485, the build the page was generated from",
+      "impact_if_wrong": "Page documents a field or wording the live server does not serve",
+      "how_to_verify": "SEERLY_TOKEN=<token> npm run references && git diff --exit-code",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H1"
+      ]
+    },
+    {
+      "id": "A2",
+      "assumption": "Per-call scope dump matches what `npm run references` sees at https://seerly.app/api/mcp",
+      "impact_if_wrong": "Project-scoped pages would differ (get_project vs list_projects, `project` argument rows)",
+      "how_to_verify": "SEERLY_TOKEN=<token> npm run references && git diff --exit-code",
+      "confidence": "grounded_in_code"
+    },
+    {
+      "id": "A3",
+      "assumption": "Fallback wording matches backend `resolveSourceCluster`: picked label, else topic's linked `sourceClusterLabel`, else null",
+      "impact_if_wrong": "Plugin users expect a fallback cluster that is never applied",
+      "how_to_verify": "Read airo-backend src/core/project/utils/source-cluster.util.ts and the describe() string in src/core/mcp/writes/add-prompts.tool.ts",
+      "confidence": "grounded_in_code",
+      "anchors": [
+        "H1"
+      ]
+    },
+    {
+      "id": "A4",
+      "assumption": "Page is documentation only; agents take the real input schema from live tools/list",
+      "impact_if_wrong": "Page drift would change agent behaviour, not just docs",
+      "how_to_verify": "Call add_prompts with `sourceCluster` through the Seerly MCP connector; check prompts.source_cluster",
+      "confidence": "grounded_in_code"
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "question": "Does the plugin version (0.2.0) need a bump for Claude plugin users to receive the updated reference?",
+      "context": "- Not considered in session\n- Repo precedent: docs-only commit 14bc494 left version unchanged",
+      "raised_by": "reviewer_agent"
+    },
+    {
+      "id": "Q2",
+      "question": "Should the skill tell agents where to get `sourceCluster` labels?",
+      "context": "- No read tool returns sourceCluster per prompt; get_keywords clusters exposes labels\n- Backend stores any trimmed string up to 255 chars, unvalidated against the universe\n- Session's labels came from psql, not an MCP tool\n- SKILL.md untouched",
+      "raised_by": "reviewer_agent",
+      "anchors": [
+        "H1"
+      ]
+    }
+  ],
+  "approach": {
+    "requirements": [
+      {
+        "text": "Separate PR in Seerly-AI/seerly-mcp, distinct repo from the backend",
+        "source": "User (entry 1085), confirmed by assistant (entry 1097)"
+      },
+      {
+        "text": "Reference page reflects the add_prompts schema shipped in PR #340",
+        "source": "User (entry 1085)"
+      }
+    ],
+    "trials": [
+      {
+        "what": "`npm run references` against live server https://seerly.app/api/mcp",
+        "outcome": "Never executed; ruled out after reading the script and checking credentials",
+        "why_abandoned": "Needs `SEERLY_TOKEN`; none stored in ~/.seerly/mcp; bridge CLI has no standalone sign-in"
+      },
+      {
+        "what": "Branch in the main seerly-mcp checkout",
+        "outcome": "Not used; worktree seerly-mcp-references off origin/main instead",
+        "why_abandoned": "Main checkout is on `feat/npm-package`"
+      },
+      {
+        "what": "Topic-level `clusterLabel` on the MCP tool",
+        "outcome": "Discussed, not done",
+        "why_abandoned": "Every prompt sends its own `sourceCluster`; 'Stock broker' spans 3 clusters; JMFS topics have no linked cluster"
+      }
+    ],
+    "adopted": {
+      "summary": "- Dump tools/list from merged backend main 01a60485 via throwaway jest spec (real `McpServerFactory`, per-call scope)\n- Feed the dump to seerly-mcp's own exported `writeReferences`\n- Commit the resulting diff: one row",
+      "rationale": "- Same `writeReferences`/`renderReference` as `npm run references`\n- 01a60485 is the build prod deployed (Build and Deploy success, 05:16 UTC)\n- Needs no Seerly access token\n- 25 other pages byte-identical: dump agrees with existing generator output"
+    }
+  },
+  "tour": [
+    {
+      "id": "T1",
+      "title": "List `sourceCluster` in preview_add_prompts reference",
+      "role": "core",
+      "what": "- Adds optional `prompts[].sourceCluster` row to the preview_add_prompts input table\n- States the omitted case: topic's linked cluster, else none",
+      "why": "- PR #340 added the field; page still listed only text, anchorKeyword, searchVolume, keywordTier\n- Generated, not hand-edited: text is the backend describe() string\n- Docs only: the field already worked on prod before this commit",
+      "anchors": [
+        {
+          "id": "H1",
+          "path": "plugin/skills/seerly/references/preview_add_prompts.md",
+          "hunk": {
+            "old_start": 16,
+            "old_lines": 3,
+            "new_start": 16,
+            "new_lines": 4
+          }
+        }
+      ],
+      "provenance": "from_transcript",
+      "attention": "Generated file: the next `npm run references` against prod must reproduce this row"
+    }
+  ],
+  "verification": {
+    "performed": [
+      {
+        "kind": "manual",
+        "description": "Dump tools/list from backend 01a60485 through `McpServerFactory`, per-call scope",
+        "result": "PASS; 26 tools; add_prompts prompt fields include sourceCluster",
+        "evidence": "TOOLS_OUT=<scratchpad>/tools-list.json npx jest src/core/mcp/__tests__/zz-dump-tools.tmp.spec.ts"
+      },
+      {
+        "kind": "manual",
+        "description": "Regenerate all 26 references with the repo's `writeReferences`",
+        "result": "Only preview_add_prompts.md changed, +1 line; 25 pages byte-identical",
+        "evidence": "tsx write-refs.mts; git status"
+      },
+      {
+        "kind": "manual",
+        "description": "PR #340 merge and deploy status",
+        "result": "Merged 05:12 UTC; Build and Deploy Backend success for 01a60485 at 05:16 UTC",
+        "evidence": "gh pr view 340; gh run list --branch main"
+      },
+      {
+        "kind": "manual",
+        "description": "Prod preview_add_prompts then add_prompts via Seerly MCP, `sourceCluster` on 4 prompts",
+        "result": "source_cluster stored on all 4 rows",
+        "evidence": "read-only psql on prompts"
+      }
+    ],
+    "added_tests": [],
+    "not_verified": [
+      {
+        "text": "Live tools/list never fetched; page never diffed against prod output",
+        "anchors": [
+          "H1"
+        ]
+      },
+      "Both blue/green slots serving 01a60485: only GitHub deploy run status read",
+      "OpenAI portal zip (`npm run package:openai`) not rebuilt or re-uploaded; ChatGPT/Codex users keep the old reference",
+      "No lint, typecheck or test: seerly-mcp has no such scripts",
+      {
+        "text": "Rendered markdown not viewed; only git diff read",
+        "anchors": [
+          "H1"
+        ]
+      }
+    ]
+  },
+  "evaluated": [
+    {
+      "question": "preview_add_prompts.md is a generated reference. What generates it (which script, from which source: the backend tool's input schema/field descriptions?), and was this row produced by running that generator or edited by hand? If by hand, will the next regeneration keep it or overwrite it?",
+      "answer": "The generator produced this row; it was not edited by hand. Session d07e7e87, entries ~1101-1255.\n\nWHAT GENERATES IT\n- seerly-mcp `scripts/generate-references.ts` (`npm run references`) connects to the live server (default https://seerly.app/api/mcp, needs `SEERLY_TOKEN`), calls `tools/list`, and passes the tools to `writeReferences`.\n- `writeReferences` deletes every file in plugin/skills/seerly/references, then writes one `<tool>.md` per tool via `renderReference` (scripts/render-reference.ts).\n- The renderer uses only name, title, description, `inputSchema` and `annotations.readOnlyHint`. It does not render output shapes. (From reading the scripts.)\n- The ultimate source is the backend tool's zod input schema and its `.describe()` strings: airo-backend `src/core/mcp/writes/add-prompts.tool.ts`, which the MCP SDK serves as JSON Schema in tools/list.\n\nHOW THIS ROW WAS PRODUCED\n- `npm run references` itself could not run, because this Mac has no `SEERLY_TOKEN` (no stored sign-in at ~/.seerly/mcp).\n- Instead, tools/list was produced from merged backend main 01a60485 (the PR #340 merge commit). A throwaway jest spec built the server through the real `McpServerFactory` in per-call scope and dumped tools/list to JSON (\"26 tools\").\n- That JSON went into the repo's own exported `writeReferences` via a scratchpad script. The script comment says: \"Feeds a dumped tools/list into seerly-mcp's own writeReferences (same renderer as `npm run references`).\"\n- Final message (1386): \"I regenerated it from the merged backend code, since this Mac has no Seerly token for `npm run references`. The other 25 pages came out unchanged.\"\n\nWILL THE NEXT REGENERATION KEEP IT\n- Yes, as long as prod serves merged main's schema. The row text is the backend's describe() string verbatim: I read add-prompts.tool.ts:49-56 and it is identical. (Inference, from the code.)\n- Prod now runs that build: \"Build and Deploy Backend completed success 01a60485 2026-11-23T05:16:52Z\".\n- Not verified: a real `npm run references` against the live server producing an empty diff. That was never run.",
+      "anchors": [
+        "H1"
+      ]
+    },
+    {
+      "question": "The new row documents a `prompts[].sourceCluster` input the backend must accept. Has the backend change that adds this field (and its fallback: topic's linked cluster, else none) already merged and deployed to prod? If not, what happens when a plugin user's agent sends `sourceCluster` to a server that does not know it yet (rejected by schema validation, or silently ignored)?",
+      "answer": "MERGED AND DEPLOYED: yes, before this commit was made.\n- `gh pr view 340` → {\"mergedAt\":\"2026-11-23T05:12:06Z\",\"sha\":\"01a60485...\",\"state\":\"MERGED\"}.\n- `gh run list` → \"Build and Deploy Backend completed success 01a60485 2026-11-23T05:16:52Z\".\n- User, mid-turn (entry 1256): \"I have deployed changes to prod. Lets ensure that we put these stock broker prompts using mcp plugin\".\n- Live proof: preview_add_prompts then add_prompts through the Seerly MCP, sending `sourceCluster` on all 4 prompts. Read-only psql afterwards showed `source_cluster` stored on each: \"trading in india\" x2, \"Global stock market\", \"Stock advisory services\".\n- The page was committed (0b32d22) after that prod check.\n- Fallback wording: matches merged backend code. `resolveSourceCluster(picked, topicCluster)` in src/core/project/utils/source-cluster.util.ts returns the trimmed picked label, else the topic's linked `sourceClusterLabel`, else null. (Inference, from the code.)\n- Not checked: that both blue/green slots serve the new build. Only the GitHub deploy run status was read.\n\nIF A SERVER WITHOUT THE FIELD RECEIVED IT: silently ignored, not rejected.\n- Session (1025), describing pre-#340 prod: \"The MCP has no field for it, and a new topic has no linked cluster to fall back to, so all 4 prompts would save with a NULL `source_cluster`.\"\n- Session (852): \"an `add_prompts` that lands on the old blue/green deployment would drop `sourceCluster` and still run the LLM anchor step.\"\n- Code reading: the tool input is plain zod objects, and there is no `.strict()`, `strictObject` or `passthrough` anywhere under src/core/mcp (I grepped), so zod's default strips unknown keys. The prompt still saves; it gets the topic's linked cluster or NULL. (Inference.)\n- The only remaining exposure is a request reaching an old blue/green slot during a deploy window.",
+      "anchors": [
+        "H1"
+      ]
+    },
+    {
+      "question": "Where does an agent get a `sourceCluster` value to pass? Does a read tool (get_prompt_ideas or similar) now return it, and if so, is that tool's reference doc expected to change too, or is this one row the whole of the docs change for the feature? Likewise, does add_prompts (the commit-by-previewId action) need any doc change?",
+      "answer": "WHERE AN AGENT GETS A VALUE\n- No read tool was changed to return `sourceCluster`. PR #340's MCP change was only `src/core/mcp/writes/add-prompts.tool.ts` (plus the backend service and specs), per the session.\n- Existing read tools that already expose keyword-universe cluster labels (inference, from code and the reference pages):\n  - `get_keywords` (actions clusters, cluster_keywords, keywords): \"The project's keyword universe: clusters with volume, head terms and their long-tail keywords\".\n  - `get_prompt_ideas`: its `uncovered_keyword_clusters` section calls keywords/clusters (src/core/mcp/jobs/prompt-ideas.job.ts:40-46).\n  - Its `current_prompts` fields do NOT include sourceCluster (PROMPT_FIELDS, lines 7-18).\n- In this session the values did not come from an MCP read tool. They were looked up on prod with psql: the anchor keyword's `l1_cluster` in the keyword universe, e.g. \"best stock broker in india\" → \"trading in india\" (entry 755). Same convention as the earlier 11-12 and 11-15 SQL rounds.\n- The backend does not check the value against the project's universe. Any trimmed string up to 255 chars is stored (source-cluster.util.ts). A wrong label is saved as-is. (Inference, from the code.)\n- Not discussed in the session: whether the skill should tell agents where to get cluster labels. SKILL.md was not touched.\n\nIS THIS ONE ROW THE WHOLE DOCS CHANGE\n- Yes, for the generated references. All 26 pages were regenerated from merged main, and only preview_add_prompts.md changed. So no other tool's input schema or description changed in #340.\n- Caveat: reference pages show inputs only. Output shapes are never rendered, so they would not show up here either way.\n\nadd_prompts.md\n- No change needed. add_prompts takes only `previewId` (its page lists that single argument), so the prompt fields appear on the preview page only.\n- Its page was rewritten byte-identical by the generator.",
+      "anchors": [
+        "H1"
+      ]
+    }
+  ]
+}
