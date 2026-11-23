@@ -16,3 +16,4 @@ Shows what add_prompts would do, and changes nothing: which prompts would be add
 | `prompts[].anchorKeyword` | string | no | The keyword the prompt was written around. |
 | `prompts[].searchVolume` | integer | no | The anchor keyword's monthly search volume. |
 | `prompts[].keywordTier` | one of `fat_head`, `long_tail` | no | fat_head or long_tail, for the anchor keyword. |
+| `prompts[].sourceCluster` | string | no | The keyword universe cluster the anchor keyword was picked from. When omitted, the topic's linked cluster is used, or none if the topic has no cluster. |
